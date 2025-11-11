@@ -1,11 +1,12 @@
 class Tonal::Scale::Analysis
-  ACCEPTED_APPROX_METHODS = %i{continued_fraction quotient_walk tree_path superparticular neighborhood}
   ACCEPTED_MEASURES = %i{benedetti wilson tenney log_weil weil}
 
   extend Forwardable
   def_delegators :@scale, :to_cents, :count, :length, :ratios, :[], :steps, :to_cents, :equave, :indices
-  def_delegators :@efficiencies, :mean, :variance, :standard_deviation, :efficiencies
-  def_delegators :@approximations, :approximate
+  def_delegators :@approximations, :approximate, :step_best_expressing, :ratio_best_expressing, :best_fitting_edo #, :by_best_expressions_of
+  def_delegators :@descriptions, :max_primes, :heights, :prime_divisions, :prime_vectors, :steps, :steps_in_cents
+  def_delegators :@efficiencies, :efficiencies, :efficiency_with
+  def_delegators :@intervals, :intervals, :occurrences, :unique_intervals_by_step_distances
 
   PRECISION = 2
 
@@ -20,6 +21,7 @@ class Tonal::Scale::Analysis
   def initialize(scale=nil)
     @scale = scale
     @approximations = Approximations.new(scale)
+    @descriptions = Descriptions.new(scale)
     @efficiencies = Efficiencies.new(scale)
     @intervals = Intervals.new(scale)
   end
@@ -28,61 +30,10 @@ class Tonal::Scale::Analysis
     scale
   end
 
-  # TODO Document
-  #
-  def self.efficiencies(modulo_range: (1..100), **kwargs)
-    ratios = (kwargs[:ratios] || Prime.within(2,7)).map(&:to_ratio).map(&:to_r)
-    _efficiencies = ->(i, rs) do
-      effis = rs.map{|r| Tonal::Step.new(ratio: r, modulo: i).efficiency}
-      avg = (effis.map(&:abs).sum / ratios.count).round(2)
-      [effis, avg].flatten
-    end
-
-    modulo_range.map do |i|
-      [i, _efficiencies[i, ratios]].flatten
-    end
-  end
-
-  # @return [Integer] the step best expressing the given ratio
-  # @example
-  #   Tonal::Scale.edo(12).best_expression_of(3/2r) => 7
-  # @param ratio
-  # @param from_step
-  # @param epsilon
-  # @param as_step
-  #
-  # TODO: Consider splitting into two methods:
-  #   1) best_step_approximation_of - returns the step of self best approximating the given ratio
-  #   2) best_ratio_approximation_of - returns the ratio contained in self, best approximating the given ratio
-  #
-  def best_expression_of(ratio, from_step: 0, epsilon: 1.cents, as_step: true)
-    ratio = ratio.kind_of?(Tonal::ReducedRatio) ? ratio : ratio.kind_of?(Numeric) ? Tonal::ReducedRatio.new(ratio) : raise(ArgumentError, "Ratio must be Tonal::ReducedRatio or Numeric")
-    interval_in_cents = (self[from_step] * ratio).to_cents
-
-    result_ratio = nil
-    while result_ratio.nil? do
-      result_ratio = scale.find{|r| (r.to_cents - interval_in_cents).abs <= epsilon }
-      epsilon += 1
-    end
-    as_step ? result_ratio.step(count) : result_ratio
-  end
-
-  # @return [Array] set of cents distances
-  # TODO Should this be moved to the Differences class?
-  #
-  # @example
-  #   Tonal::Scale.linear.cents_distance_from(Tonal::ReducedRatio.identity)
-  #   => [0.0, 113.68500605771192, 203.91000173077484, 317.5950077884867, 407.8200034615497, 521.5050095192616, 611.7300051923246, 701.9550008653874, 815.6400069230993, 905.8650025961623, 1019.5500086538742, 1109.775004326937]
-  #
-  # @param ratio
-  #
-  def cents_distance_from(ratio=Tonal::ReducedRatio.identity)
-    ratios.map{|r| r.cents_distance_from(ratio)}
-  end
-
   # @return [Array] list of all modes of self
   # @example
   #   TODO provide one
+  #   TODO Consider putting in a Descriptions class
   #
   def modes
     [].tap do |scales|
@@ -102,34 +53,6 @@ class Tonal::Scale::Analysis
     unique_intervals_by_steps_flattened.count == unique_intervals_by_steps_flattened.uniq.count
   end
 
-  # @return [Float] difference in cents between the provided ratio and the scale's best step approximation to it
-  # @example
-  #   Tonal::Scale.edo(12).efficiency_with(81/64r) => -7.82
-  #
-  def efficiency_with(ratio)
-    ratio = ratio.kind_of?(Tonal::ReducedRatio) ? ratio : ratio.kind_of?(Numeric) ? Tonal::ReducedRatio.new(ratio) : raise(ArgumentError, "Ratio must be Tonal::ReducedRatio or Numeric")
-    ratio.efficiency(count)
-  end
-
-  # @return [Array] of max primes of the ratios
-  # @example
-  #   Tonal::Scale::Analysis.new(Tonal::Scale.new(1/1r, 3/2r, 5/4r, 7/4r)).max_primes
-  #   => [2, 5, 3, 7]
-  #
-  def max_primes
-    ratios.map(&:max_prime)
-  end
-
-  # TODO Document
-  #
-  def heights(method: :benedetti)
-    return "Unknown measure #{method}. Use #{ACCEPTED_MEASURES}" unless ACCEPTED_MEASURES.include?(method)
-    method = "#{method}_height".to_sym
-    ratios.map(&method)
-  end
-  alias :measures :heights
-
-
   # @return [Tonal::Scale::Analysis::Differences] containing the differences of scale notes to selected measure
   # @example
   #   Tonal::Scale.edo(7).differences
@@ -138,42 +61,6 @@ class Tonal::Scale::Analysis
   #
   def differences(unit: :hundredth_cent)
     Differences.new(scale, unit:)
-  end
-
-  # @return [Array] of prime divisions of the ratios
-  # @example
-  #   Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r).prime_divisions
-  #   => [[[[2, 1]], [[2, 1]]], [[[5, 1]], [[2, 2]]], [[[3, 1]], [[2, 1]]], [[[7, 1]], [[2, 2]]]]
-  #
-  def prime_divisions
-    ratios.map(&:prime_divisions)
-  end
-
-  # @return [Array] of prime vectors of the notes of the scale
-  # @example
-  # TODO Document
-  #
-  def prime_vectors
-    ratios.map(&:prime_vector)
-  end
-
-  # @return [Array] of [Tonal::Step] mapping for the given modulo
-  # @example
-  #   Tonal::Scale.cps.steps
-  #   => [1\6, 2\6, 2\6, 4\6, 5\6, 5\6]
-  # @param mod [Integer] the modulo
-  #
-  def steps(modulo=count)
-    ratios.map{|ratio| ratio.step(modulo)}
-  end
-
-  # @return [Array] of steps in modulo 1200
-  # @example
-  #   Tonal::Scale.cps.steps_in_cents
-  #   => [155\1200, 386\1200, 471\1200, 702\1200, 969\1200, 1088\1200]
-  #
-  def steps_in_cents
-    steps(mod: Tonal::Cents::CENT_SCALE)
   end
 
   # BEGIN Moved from Tonal::Scale.
@@ -190,152 +77,17 @@ class Tonal::Scale::Analysis
 
   # END Moved from Tonal::Scale
 
-  # WIP: Analyzing generating MOS
+  # TODO WIP: Analyzing generating MOS
   def self.partitionings(mod)
     1.upto(mod).map{|i| "#{i}: #{Step.new(mod, (2**(i.to_f/mod)))}, #{mod} / #{i} = #{mod / i}, #{mod} % #{i} = #{mod % i}"}
   end
 
   # ######################################################
-  # Presentation
-  # ######################################################
-  #
-  # TODO: Document
-  # Move out to a presentation class
-  #
-  def to_radians
-    ratios.map{|r| r.period_radians}
-  end
-  alias :radians :to_radians
-
-  # TODO: Document
-  # Move out to a presentation class
-  def to_degrees
-    ratios.map{|r| r.period_degrees}
-  end
-  alias :degrees :to_degrees
-
-  # TODO: Document
-  # Move out to a presentation class
-  def to_circle
-    rotation = Math::PI / 2
-    to_radians.map{|r| [-Math.cos(r + rotation), Math.sin(r + rotation)]}
-  end
-  alias :circle :to_circle
-
-  # ######################################################
   # Measurements
   # ######################################################
 
-  # @return [Array] averages between consecutive ratios of scale
-  def averages_between_steps
-    [].tap do |ratios|
-      scale.each_cons(2) do |r1, r2|
-        ratios << ((r1.to_r + r2.to_r) / 2).ratio
-      end
-    end
-  end
-
-  # @return [Tonal::Interval] interval between given steps of scale
-  # @example
-  #   scale = Tonal::Scale.harmonic
-  #   Tonal::Scale::Analysis.new(scale).interval_between_steps(3, 4)
-  #   => 12/11 (3/2 / 11/8)
-  #
-  # @example
-  #   Tonal::Scale.harmonic.interval_between_steps(3, 4)
-  #   => 12/11 (3/2 / 11/8)
-  #
-  # @param lower_step [Integer] scale step of the divisor
-  # @param upper_step [Integer] scale step of the dividend
-  #
-  def interval_between_steps(lower_step, upper_step)
-    Tonal::Interval.new(scale[lower_step], scale[upper_step])
-  end
-
-  # @return [Array] of all intervals for step of scale
-  # @example
-  #   scale = Tonal::Scale.harmonic
-  #   Tonal::Scale::Analysis.new(scale).all_intervals_by_step(2)
-  #   => [8/5 (1/1 / 5/4), 18/11 (9/8 / 11/8), 5/3 (5/4 / 3/2), 22/13 (11/8 / 13/8), 12/7 (3/2 / 7/4), 26/15 (13/8 / 15/8), 7/4 (7/4 / 1/1), 5/3 (15/8 / 9/8)]
-  #
-  # @example
-  #    Tonal::Scale.harmonic.all_intervals_by_step(2)
-  #    => [8/5 (1/1 / 5/4), 18/11 (9/8 / 11/8), 5/3 (5/4 / 3/2), 22/13 (11/8 / 13/8), 12/7 (3/2 / 7/4), 26/15 (13/8 / 15/8), 7/4 (7/4 / 1/1), 5/3 (15/8 / 9/8)]
-  #
-  # @param step between note pairs
-  #
-  # TODO
-  # Review what this is doing
-  # 1. In method name and API, differentiate between step on which interval measurement is being based and interval being measured
-  # 2. Allow method to accept the step and the interval
-  # 3. Consolidate methods into this method
-  def all_intervals_by_step(step)
-    [].tap do |accumulator|
-      0.upto(count-1) do |i|
-        accumulator << interval_between_steps(i, i+step)
-      end
-    end
-  end
-  # intervals_at_step
-  # intervals_by_step
-  # step_distant_intervals
-  # intervals_step_apart
-  # intervals
-
-  # @return [Array] array of all intervals for all steps of scale
-  # @example
-  #   Tonal::Scale::Analysis.new(Tonal::Scale.harmonic).all_intervals_by_steps
-  #     => [[1/1 (1/1 / 1/1), 1/1 (9/8 / 9/8), 1/1 (5/4 / 5/4), 1/1 (11/8 / 11/8), 1/1 (3/2 / 3/2), 1/1 (13/8 / 13/8), 1/1 (7/4 / 7/4), 1/1 (15/8 / 15/8)],
-  #         [16/9 (1/1 / 9/8), 9/5 (9/8 / 5/4), 20/11 (5/4 / 11/8), 11/6 (11/8 / 3/2), 24/13 (3/2 / 13/8), 13/7 (13/8 / 7/4), 28/15 (7/4 / 15/8), 15/8 (15/8 / 1/1)],
-  #        ...
-  #
-  def all_intervals_by_steps
-    [].tap do |accumulator|
-      0.upto(count-1) do |i|
-        accumulator << all_intervals_by_step(i)
-      end
-    end
-  end
-
-  # @return [Array] array of unique intervals with a given step distance
-  # @example
-  #   scale = Tonal::Scale.from_scalarchive("wilson7")
-  #   Tonal::Scale::Analysis.new(scale).unique_intervals_by_step(1)
-  #   => [(81/80) ((9/8) / (10/9)), (25/24) ((10/9) / (16/15)), (36/35) ((16/15) / (28/27)), (28/27) ((28/27) / (1/1))]
-  # @param step between note pairs
-  #
-  def unique_intervals_by_step(step)
-    all_intervals_by_step(step).uniq{|i| i.to_r}.sort{|i| i.to_r}
-  end
-
-  # @return
-  # @example
-  # @param
-  # TODO Document
-  def unique_interval_prime_vectors_by_step(step)
-    pvs = unique_intervals_by_step(step).map(&:interval).map(&:prime_vector).map(&:to_a)
-    max_count = pvs.map(&:length).max
-    pvs.map{|e| e.rpad!(max_count, 0)}
-  end
-
   def determinant_by_step(step)
     Matrix[*unique_interval_prime_vectors_by_step(step)].determinant
-  end
-
-  # @return [Array] array of intervals for all steps of scale
-  # @example
-  #   Tonal::Scale::Analysis.new(Tonal::Scale.harmonic).unique_intervals_by_step_distances
-  #   => [[1/1 (1/1 / 1/1)],
-  #       [11/10 (11/8 / 5/4), 16/15 (1/1 / 15/8), 15/14 (15/8 / 7/4), 14/13 (7/4 / 13/8), 9/8 (9/8 / 1/1), 13/12 (13/8 / 3/2), 12/11 (3/2 / 11/8), 10/9 (5/4 / 9/8)],
-  #       [8/7 (1/1 / 7/4), 15/13 (15/8 / 13/8), 7/6 (7/4 / 3/2), 13/11 (13/8 / 11/8), 6/5 (3/2 / 5/4), 11/9 (11/8 / 9/8), 5/4 (5/4 / 1/1)],
-  #      ...
-  #
-  def unique_intervals_by_step_distances
-    [].tap do |accumulator|
-      0.upto(count-1) do |i|
-        accumulator << unique_intervals_by_step(i)
-      end
-    end
   end
 
   # @return [Array] of all intervals found in scale that span ratio
@@ -348,37 +100,6 @@ class Tonal::Scale::Analysis
     all_intervals_by_steps.flatten.find_all{|i| i.interval == ratio}
   end
 
-  #
-  # @return [Hash] containing ratio varieties between pairs of ratios at each step of scale
-  # @example
-  #
-  #
-  def variations_of_unique_intervals
-    Hash.new{|h, k| h[k] = []}.tap do |hsh|
-      unique_intervals_by_step_distances.each do |row|
-        next if row.one?
-        row.combination(2).map do |comb|
-          variation = (comb[1] > comb[0]) ? comb[1].to_r / comb[0].to_r : comb[0].to_r / comb[1].to_r
-          hsh[variation] << comb
-        end
-      end
-    end
-  end
-
-  # TODO: See how output could be better designed
-  # Brought over from Intervals
-  #
-  def occurences
-    Hash.new{|h,k| h[k] = []}.tap do |hsh|
-      scale.to_a.each do |n|
-        scale.to_a.each do |m|
-          i = Tonal::Interval.new(n, m)
-          hsh[i.interval.to_r] << i
-        end
-      end
-    end.sort.to_h
-  end
-
   # @return [Boolean] if scale is an MOS
   # @example
   #   TODO
@@ -386,18 +107,6 @@ class Tonal::Scale::Analysis
   #
   def mos?
     intervals.sequential_unique.count.in? [1, 2]
-  end
-
-  # @return [Scale] of ratios best expressed by argument list
-  # @example
-  #   Tonal::Scale.edo(12).by_best_expressions_of(3/2r, 9/8r) => [[78986244726619, 70368744177664], [421735949569275, 281474976710656]]
-  #
-  def by_best_expressions_of(*rats)
-    accumulated_steps = []
-    rats.each do |ratio|
-      accumulated_steps << best_expression_of(ratio)
-    end
-    ratios_at(*accumulated_steps)
   end
 
   # @return [Array] of cent differences between self and the nearest approximations expressed by modulo
@@ -423,18 +132,31 @@ class Tonal::Scale::Analysis
   end
 
   class Approximations
+    ACCEPTED_APPROX_METHODS = %i{continued_fraction tree_path superparticular neighborhood}
+
     extend Forwardable
-    def_delegators :@scale, :to_cents, :count, :length, :ratios, :[], :steps, :to_cents, :equave, :indices
+    def_delegators :@scale, :to_cents, :count, :length, :ratios, :[], :first, :steps, :to_cents, :equave, :indices, :to_r
+
+    attr_reader :scale
 
     def initialize(scale)
       @scale = scale
     end
 
-    # TODO Document
+    # @return [Array] of alternate approximations of ratios of the scale
+    # @example
+    #   Tonal::Scale::Analysis::Approximations.new(Tonal::Scale.new(2**(0.0/12), (2**(1.0/12)))).approximate
+    #   => [[0, (1/1): [(1/1)]], [1, (4771397596969315/4503599627370496): [(17/16), (18/17), (89/84), (196/185), (1461/1379), (1657/1564), (3118/2943), (7893/7450), (18904/17843)]]]
     #
-    def approximate(by: :continued_fraction, sort_by: :benedetti_height, **kwargs)
-      return "Unknown approximation type: #{by}. Use #{ACCEPTED_APPROX_METHODS}" unless ACCEPTED_APPROX_METHODS.include?(by)
+    # @param by [Symbol] the approximation algorithm. Accepted types are :continued_fraction, :tree_path, :superparticular, :neighborhood
+    # @param sort_by [Symbol] the measures to sort the list of approximating ratios. Accepted measures are :benedetti, :wilson, :tenney, :log_weil, :weil
+    # @param **kwargs keyword arguments used in the context of the algorithm
+    #
+    def approximate(by: :continued_fraction, sort_by: :benedetti, **kwargs)
+      raise(ArgumentError, "Unknown approximation type: #{by}. Use #{ACCEPTED_APPROX_METHODS}") unless ACCEPTED_APPROX_METHODS.include?(by)
+      raise(ArgumentError, "Unknown measure type: #{sort_by}. Use #{ACCEPTED_MEASURES}") unless ACCEPTED_MEASURES.include?(sort_by)
 
+      sort_by = "#{sort_by}_height".to_sym
       cents_tolerance = kwargs[:cents_tolerance] || Tonal::Cents::TOLERANCE
       max_prime = kwargs[:max_prime] || Tonal::Ratio::Approximation::DEFAULT_MAX_PRIME
 
@@ -456,6 +178,114 @@ class Tonal::Scale::Analysis
         max_scale = kwargs[:max_scale] || Tonal::Ratio::Approximation::DEFAULT_MAX_GRID_SCALE
         ratios.each_with_index.map{|r, i| [i, r.approximate.send("by_#{by}".to_sym, cents_tolerance:, depth:, max_prime:, max_boundary:, max_scale:).sort_by(&sort_by.to_sym)]}
       end
+    end
+
+    # @return [Rational] the ratio of scale best expressing the given ratio
+    # @example
+    #   Tonal::Scale::Analysis::Approximations.new(Tonal::Scale.edo(12)).ratio_best_expressing(3/2r)
+    #     => 421735949569275/281474976710656
+    #
+    # @param ratio being compared to notes of scale
+    # @param epsilon nearness, in cents, to notes of scale being compared
+    #
+    def ratio_best_expressing(ratio, epsilon: 1.cents)
+      ratio = ratio.kind_of?(Tonal::ReducedRatio) ? ratio : ratio.kind_of?(Numeric) ? Tonal::ReducedRatio.new(ratio) : raise(ArgumentError, "Ratio must be Tonal::ReducedRatio or Numeric")
+      interval_in_cents = (first * ratio).to_cents
+
+      result_ratio = nil
+      while result_ratio.nil? do
+        result_ratio = scale.find{|r| (r.to_cents - interval_in_cents).abs <= epsilon}
+        epsilon += 1
+      end
+      result_ratio
+    end
+
+    # @return [Tonal::Step] the step of scale best expressing the given ratio
+    # @example
+    #   Tonal::Scale::Analysis::Approximations.new(Tonal::Scale.edo(12)).step_best_expressing(3/2r)
+    #     => 7\12
+    #
+    # @param ratio being compared to notes of scale
+    # @param epsilon nearness, in cents, to notes of scale being compared
+    #
+    def step_best_expressing(ratio, epsilon: 1.cents)
+      ratio_best_expressing(ratio, epsilon: epsilon).step(count)
+    end
+
+    # @return [Array] tuple with the EDO scale and average error best fitting self
+    # @example
+    #
+    # @param min_edo
+    # @param max_edo
+    #
+    def best_fitting_edo(min_edo: 5, max_edo: 72)
+      to_r.best_fitting_edo(min_edo:, max_edo:)
+    end
+
+  end
+
+  class Descriptions
+    extend Forwardable
+    def_delegators :@scale, :to_cents, :count, :length, :ratios, :[], :first, :steps, :to_cents, :equave, :indices
+
+    attr_reader :scale
+
+    def initialize(scale)
+      @scale = scale
+    end
+
+    # @return [Array] of max primes of the ratios
+    # @example
+    #   Tonal::Scale::Analysis.new(Tonal::Scale.new(1/1r, 3/2r, 5/4r, 7/4r)).max_primes
+    #   => [2, 5, 3, 7]
+    #
+    def max_primes
+      ratios.map(&:max_prime)
+    end
+
+    # TODO Document
+    #
+    def heights(method: :benedetti)
+      return "Unknown measure #{method}. Use #{ACCEPTED_MEASURES}" unless ACCEPTED_MEASURES.include?(method)
+      method = "#{method}_height".to_sym
+      ratios.map(&method)
+    end
+    alias :measures :heights
+
+    # @return [Array] of prime divisions of the ratios
+    # @example
+    #   Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r).prime_divisions
+    #   => [[[[2, 1]], [[2, 1]]], [[[5, 1]], [[2, 2]]], [[[3, 1]], [[2, 1]]], [[[7, 1]], [[2, 2]]]]
+    #
+    def prime_divisions
+      ratios.map(&:prime_divisions)
+    end
+
+    # @return [Array] of prime vectors of the notes of the scale
+    # @example
+    # TODO Document
+    #
+    def prime_vectors
+      ratios.map(&:prime_vector)
+    end
+
+    # @return [Array] of [Tonal::Step] mapping for the given modulo
+    # @example
+    #   Tonal::Scale.cps(1,3,5,7).steps
+    #   => [1\6, 2\6, 2\6, 4\6, 5\6, 5\6]
+    # @param mod [Integer] the modulo
+    #
+    def steps(modulo=count)
+      ratios.map{|ratio| ratio.step(modulo)}
+    end
+
+    # @return [Array] of steps in modulo 1200
+    # @example
+    #   Tonal::Scale.cps(1,3,5,7).steps_in_cents
+    #   => [155\1200, 386\1200, 471\1200, 702\1200, 969\1200, 1088\1200]
+    #
+    def steps_in_cents
+      steps(Tonal::Cents::CENT_SCALE)
     end
   end
 
@@ -543,23 +373,13 @@ class Tonal::Scale::Analysis
       scale.ratios.map{|r| r.efficiency(modulo)}
     end
 
-    # TODO Document
+    # @return [Float] difference in cents between the provided ratio and the scale's best step approximation to it
+    # @example
+    #   Tonal::Scale.edo(12).efficiency_with(81/64r) => -7.82
     #
-    def mean(modulo=count, round: PRECISION)
-      (efficiencies(modulo).sum/count).round(round)
-    end
-
-    # TODO Document
-    #
-    def variance(modulo=count, round: PRECISION)
-      m = mean(modulo, round:)
-      (efficiencies(modulo).map{|x| (x - m)**2}.sum/count).round(round)
-    end
-
-    # TODO Document
-    #
-    def standard_deviation(modulo=count, round: PRECISION)
-      (Math.sqrt(variance(modulo, round:))).round(round)
+    def efficiency_with(ratio)
+      ratio = ratio.kind_of?(Tonal::ReducedRatio) ? ratio : ratio.kind_of?(Numeric) ? Tonal::ReducedRatio.new(ratio) : raise(ArgumentError, "Ratio must be Tonal::ReducedRatio or Numeric")
+      ratio.efficiency(count)
     end
   end
 
@@ -573,6 +393,143 @@ class Tonal::Scale::Analysis
       @inventory = nil
     end
 
+    # TODO See how output could be better designed
+    # TODO Document
+    #
+    def occurrences
+      Hash.new{|h,k| h[k] = []}.tap do |hsh|
+        scale.to_a.each do |n|
+          scale.to_a.each do |m|
+            i = Tonal::Interval.new(n, m)
+            hsh[i.interval.to_r] << i
+          end
+        end
+      end.sort.to_h
+    end
+
+    # @return [Array] averages between consecutive ratios of scale
+    def averages_between_steps
+      [].tap do |ratios|
+        scale.each_cons(2) do |r1, r2|
+          ratios << ((r1.to_r + r2.to_r) / 2).to_ratio
+        end
+      end
+    end
+
+    # @return [Tonal::Interval] interval between given steps of scale
+    # @example
+    #   scale = Tonal::Scale.harmonic
+    #   Tonal::Scale::Analysis.new(scale).interval_between_steps(3, 4)
+    #   => 12/11 (3/2 / 11/8)
+    #
+    # @example
+    #   Tonal::Scale.harmonic.interval_between_steps(3, 4)
+    #   => 12/11 (3/2 / 11/8)
+    #
+    # @param lower_step [Integer] scale step of the divisor
+    # @param upper_step [Integer] scale step of the dividend
+    #
+    def interval_between_steps(lower_step, upper_step)
+      Tonal::Interval.new(scale[lower_step], scale[upper_step])
+    end
+
+    # @return [Array] of all intervals for step of scale
+    # @example
+    #   scale = Tonal::Scale.harmonic
+    #   Tonal::Scale::Analysis.new(scale).all_intervals_by_step(2)
+    #   => [8/5 (1/1 / 5/4), 18/11 (9/8 / 11/8), 5/3 (5/4 / 3/2), 22/13 (11/8 / 13/8), 12/7 (3/2 / 7/4), 26/15 (13/8 / 15/8), 7/4 (7/4 / 1/1), 5/3 (15/8 / 9/8)]
+    #
+    # @example
+    #    Tonal::Scale.harmonic.all_intervals_by_step(2)
+    #    => [8/5 (1/1 / 5/4), 18/11 (9/8 / 11/8), 5/3 (5/4 / 3/2), 22/13 (11/8 / 13/8), 12/7 (3/2 / 7/4), 26/15 (13/8 / 15/8), 7/4 (7/4 / 1/1), 5/3 (15/8 / 9/8)]
+    #
+    # @param step between note pairs
+    #
+    # TODO
+    # Review what this is doing
+    # 1. In method name and API, differentiate between step on which interval measurement is being based and interval being measured
+    # 2. Allow method to accept the step and the interval
+    # 3. Consolidate methods into this method
+    def all_intervals_by_step(step)
+      [].tap do |accumulator|
+        0.upto(count-1) do |i|
+          accumulator << interval_between_steps(i, i+step)
+        end
+      end
+    end
+    # intervals_at_step
+    # intervals_by_step
+    # step_distant_intervals
+    # intervals_step_apart
+    # intervals
+
+    # @return [Array] array of all intervals for all steps of scale
+    # @example
+    #   Tonal::Scale::Analysis.new(Tonal::Scale.harmonic).all_intervals_by_steps
+    #     => [[1/1 (1/1 / 1/1), 1/1 (9/8 / 9/8), 1/1 (5/4 / 5/4), 1/1 (11/8 / 11/8), 1/1 (3/2 / 3/2), 1/1 (13/8 / 13/8), 1/1 (7/4 / 7/4), 1/1 (15/8 / 15/8)],
+    #         [16/9 (1/1 / 9/8), 9/5 (9/8 / 5/4), 20/11 (5/4 / 11/8), 11/6 (11/8 / 3/2), 24/13 (3/2 / 13/8), 13/7 (13/8 / 7/4), 28/15 (7/4 / 15/8), 15/8 (15/8 / 1/1)],
+    #        ...
+    #
+    def all_intervals_by_steps
+      [].tap do |accumulator|
+        0.upto(count-1) do |i|
+          accumulator << all_intervals_by_step(i)
+        end
+      end
+    end
+
+    # @return [Array] array of unique intervals with a given step distance
+    # @example
+    #   scale = Tonal::Scale.from_scalarchive("wilson7")
+    #   Tonal::Scale::Analysis.new(scale).unique_intervals_by_step(1)
+    #   => [(81/80) ((9/8) / (10/9)), (25/24) ((10/9) / (16/15)), (36/35) ((16/15) / (28/27)), (28/27) ((28/27) / (1/1))]
+    # @param step between note pairs
+    #
+    def unique_intervals_by_step(step)
+      all_intervals_by_step(step).uniq{|i| i.to_r}.sort{|i| i.to_r}
+    end
+
+    # @return
+    # @example
+    # @param
+    # TODO Document
+    def unique_interval_prime_vectors_by_step(step)
+      pvs = unique_intervals_by_step(step).map(&:interval).map(&:prime_vector).map(&:to_a)
+      max_count = pvs.map(&:length).max
+      pvs.map{|e| e.rpad!(max_count, 0)}
+    end
+
+    # @return [Array] array of intervals for all steps of scale
+    # @example
+    #   Tonal::Scale::Analysis.new(Tonal::Scale.harmonic).unique_intervals_by_step_distances
+    #   => [[1/1 (1/1 / 1/1)],
+    #       [11/10 (11/8 / 5/4), 16/15 (1/1 / 15/8), 15/14 (15/8 / 7/4), 14/13 (7/4 / 13/8), 9/8 (9/8 / 1/1), 13/12 (13/8 / 3/2), 12/11 (3/2 / 11/8), 10/9 (5/4 / 9/8)],
+    #       [8/7 (1/1 / 7/4), 15/13 (15/8 / 13/8), 7/6 (7/4 / 3/2), 13/11 (13/8 / 11/8), 6/5 (3/2 / 5/4), 11/9 (11/8 / 9/8), 5/4 (5/4 / 1/1)],
+    #      ...
+    #
+    def unique_intervals_by_step_distances
+      [].tap do |accumulator|
+        0.upto(count-1) do |i|
+          accumulator << unique_intervals_by_step(i)
+        end
+      end
+    end
+
+    # @return [Hash] containing ratio varieties between pairs of ratios at each step of scale
+    # @example
+    #
+    def variations_of_unique_intervals
+      Hash.new{|h, k| h[k] = []}.tap do |hsh|
+        unique_intervals_by_step_distances.each do |row|
+          next if row.one?
+          row.combination(2).map do |comb|
+            variation = (comb[1] > comb[0]) ? comb[1].to_r / comb[0].to_r : comb[0].to_r / comb[1].to_r
+            hsh[variation] << comb
+          end
+        end
+      end
+    end
+
     # TODO Document
     #
     def combinations_description
@@ -582,10 +539,10 @@ class Tonal::Scale::Analysis
     # Intervals charts
     # Done
     #   2D Table - Table of ratios between pitches
-    #   Occurences - List of occurences of ratios
+    #   Occurences - List of occurrences of ratios
     # WIP
     #   Inventory - Inventory of all ratios - Includes: interval, prime vector, difference
-    #     To add: occurences
+    #     To add: occurrences
     # TO DO
     #   Structure - List of ratios ordered by their subtending count
     #
@@ -600,19 +557,6 @@ class Tonal::Scale::Analysis
     #    rows << ([n.to_r] + [].tap{|combis| scale.each{|m| combis << (n / m).to_r}})
     #  end
     #  Terminal::Table.new(rows: rows)
-    #end
-
-    # TODO: Document
-    #
-    #def occurences
-    #  Hash.new{|h,k| h[k] = []}.tap do |hsh|
-    #    scale.to_a.each do |n|
-    #      scale.to_a.each do |m|
-    #        i = Interval.new(n, m)
-    #        hsh[i.interval.to_r] << i
-    #      end
-    #    end
-    #  end.sort.to_h
     #end
 
     # TODO Document
@@ -671,7 +615,7 @@ class Tonal::Scale::Analysis
       case format
       when :sequential
         [].tap do |intervals|
-          scale.each_cons(2){|first, second| intervals << Interval(first, second)}
+          scale.each_cons(2){|first, second| intervals << Interval.new(first, second)}
         end
       when :combination
         Hash.new {|h,k| h[k] = []}.tap do |h|
@@ -683,6 +627,38 @@ class Tonal::Scale::Analysis
       else
         "Nothing to do"
       end
+    end
+  end
+
+  class Statistics
+    extend Forwardable
+    def_delegators :@scale, :count, :efficiencies
+
+    PRECISION = 2
+
+    attr_reader :scale
+
+    def initialize(scale)
+      @scale = scale
+    end
+
+    # TODO Document
+    #
+    def mean(modulo=count, round: PRECISION)
+      (efficiencies(modulo).sum/count).round(round)
+    end
+
+    # TODO Document
+    #
+    def variance(modulo=count, round: PRECISION)
+      m = mean(modulo, round:)
+      (efficiencies(modulo).map{|x| (x - m)**2}.sum/count).round(round)
+    end
+
+    # TODO Document
+    #
+    def standard_deviation(modulo=count, round: PRECISION)
+      (Math.sqrt(variance(modulo, round:))).round(round)
     end
   end
 end

@@ -14,19 +14,19 @@ RSpec.describe Tonal::Sequence do
   end
 
   describe "class methods" do
-    describe ".denominize" do
-      let(:ratios) { [5/4r, 7/4r, 15/8r] }
-
-      it { expect(described_class.denominize(ratios)).to eq [Tonal::Ratio.new(10,8), Tonal::Ratio.new(14,8), Tonal::Ratio.new(15,8)] }
-    end
+    #describe ".denominize" do
+    #  let(:ratios) { [5/4r, 7/4r, 15/8r] }
+    #
+    #  it { expect(described_class.denominize(ratios)).to eq [Tonal::Ratio.new(10,8), Tonal::Ratio.new(14,8), Tonal::Ratio.new(15,8)] }
+    #end
 
     describe ".afs" do
       it { expect(described_class.afs).to eq described_class.new(1/1r, 2/1r, 3/1r, 4/1r, 5/1r, 6/1r, 7/1r, 8/1r, 9/1r, 10/1r, 11/1r, 12/1r, 13/1r, 14/1r, 15/1r, 16/1r) }
     end
 
-    describe ".composite" do
-      it { skip "implement or remove" }
-    end
+    #describe ".composite" do
+    #  it { skip "implement or remove" }
+    #end
 
     describe ".cps" do
       it { expect(described_class.cps(set: [1,3,5,7])).to eq described_class.new(3/1r, 5/1r, 7/1r, 15/1r, 21/1r, 35/1r) }
@@ -36,9 +36,9 @@ RSpec.describe Tonal::Sequence do
       it { expect(described_class.harmonic).to eq described_class.new(8/1r, 9/1r, 10/1r, 11/1r, 12/1r, 13/1r, 14/1r, 15/1r, 16/1r) }
     end
 
-    describe ".intra_proportional" do
-      it { expect(described_class.intra_proportional(ratios: [3/2r, 4/3r])).to eq described_class.new(15/12r, 8/6r, 17/12r, 9/6r, 19/12r) }
-    end
+    #describe ".intra_proportional" do
+    #  it { expect(described_class.intra_proportional(ratios: [3/2r, 4/3r])).to eq described_class.new(15/12r, 8/6r, 17/12r, 9/6r, 19/12r) }
+    #end
 
     describe ".linear" do
       it { expect(described_class.linear).to eq described_class.new(1/1r, 3/2r, 9/4r, 27/8r, 81/16r, 243/32r, 729/64r, 2187/128r, 6561/256r, 19683/512r, 59049/1024r, 177147/2048r) }

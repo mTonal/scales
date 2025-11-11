@@ -201,11 +201,12 @@ class Tonal::IO::Scl < Tonal::IO::Scale
   #
   def write
     output = hashed_output
-    #
+
     # The .scl documentation says 1/1 is implicit and must not be included in
     # the file. However, some parsers, e.g. Pianoteq, expect 1/1 to be mapped
     # to 2/1. Hence, we use identity_ratio and has_identity_ratio? to appease
     # parsers that require 2/1 in the file.
+    #
     pitches = output['pitches'].reject{|p| p == identity_ratio}
 
     template = <<~EOT

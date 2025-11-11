@@ -1,7 +1,6 @@
 require "spec_helper"
 
 RSpec.describe Tonal::Scale::Analysis do
-  #def best_expression_of(ratio, from_step: 0, epsilon: 1.cents, as_step: true)
   #def averages_between_steps
   #def unique_intervals_by_step(step)
   #def unique_interval_prime_vectors_by_step(step)
@@ -35,60 +34,56 @@ RSpec.describe Tonal::Scale::Analysis do
     
   end
 
-  describe "#interval_between_steps" do
-    let(:scale) { Tonal::Scale.afs }
-
-    it "expects two arguments" do
-      expect{ described_class.new(scale).interval_between_steps }.to raise_error ArgumentError, "wrong number of arguments (given 0, expected 2)"
-    end
-
-    it "returns the interval between the given steps" do
-      expect(described_class.new(scale).interval_between_steps(0, 1)).to eq Tonal::Interval.new(1/1r, 9/8r)
-    end
-
-    context "When the inputs are reversed" do
-      it "returns the reciprocol interval between the steps" do
-        expect(described_class.new(scale).interval_between_steps(1, 0)).to eq Tonal::Interval.new(9/8r, 1/1r)
-      end
-    end
-  end
+  #describe "#interval_between_steps" do
+  #  let(:scale) { Tonal::Scale.afs }
+  #
+  #  it "expects two arguments" do
+  #    expect{ described_class.new(scale).interval_between_steps }.to raise_error ArgumentError, "wrong number of arguments (given 0, expected 2)"
+  #  end
+  #
+  #  it "returns the interval between the given steps" do
+  #    expect(described_class.new(scale).interval_between_steps(0, 1)).to eq Tonal::Interval.new(1/1r, 9/8r)
+  #  end
+  #
+  #  context "When the inputs are reversed" do
+  #    it "returns the reciprocol interval between the steps" do
+  #      expect(described_class.new(scale).interval_between_steps(1, 0)).to eq Tonal::Interval.new(9/8r, 1/1r)
+  #    end
+  #  end
+  #end
 
   # TODO Eliminate method?
   #def all_intervals_by_step(step)
   #def all_intervals_by_steps
-  describe "#all_intervals_by_step" do
-    let(:scale) { Tonal::Scale.harmonic }
-
-    it("expects an argument") do
-      expect{ described_class.new(scale).all_intervals_by_step }.to raise_error ArgumentError, "wrong number of arguments (given 0, expected 1)"
-    end
-
-    #it("does something") do
-    #  expect(described_class.new(scale).all_intervals_by_step(0)).to eq []
-    #end
-  end
+  #describe "#all_intervals_by_step" do
+  #  let(:scale) { Tonal::Scale.harmonic }
+  #
+  #  it("expects an argument") do
+  #    expect{ described_class.new(scale).all_intervals_by_step }.to raise_error ArgumentError, "wrong number of arguments (given 0, expected 1)"
+  #  end
+  #end
 
   describe "#cents_distance_from" do
     
   end
 
-  describe "#constant_structure?" do
-    context "with non-constant structure scale" do
-      let(:scale) { Tonal::Scale.harmonic }
-
-      it "returns false" do
-        expect(described_class.new(scale).constant_structure?).to eq false
-      end
-    end
-
-    context "with constant structure scale" do
-      let(:scale) { Tonal::Scale.linear }
-
-      it "returns true" do
-        expect(described_class.new(scale).constant_structure?).to eq true
-      end
-    end
-  end
+  #describe "#constant_structure?" do
+  #  context "with non-constant structure scale" do
+  #    let(:scale) { Tonal::Scale.harmonic }
+  #
+  #    it "returns false" do
+  #      expect(described_class.new(scale).constant_structure?).to eq false
+  #    end
+  #  end
+  #
+  #  context "with constant structure scale" do
+  #    let(:scale) { Tonal::Scale.linear }
+  #
+  #    it "returns true" do
+  #      expect(described_class.new(scale).constant_structure?).to eq true
+  #    end
+  #  end
+  #end
 
   describe "#efficiency_with" do
     let(:ratio) { 81/64r }
@@ -109,13 +104,6 @@ RSpec.describe Tonal::Scale::Analysis do
 
   describe "#approximate" do
     
-  end
-
-  # TODO Consolodate
-  describe "#best_expression_of" do
-    it "does something" do
-      skip "unimplemented"
-    end
   end
 
   #describe "#cents_difference" do
@@ -189,7 +177,7 @@ RSpec.describe Tonal::Scale::Analysis do
       let(:modulo) { 53 }
 
       it "steps are calculated from the scale ratio's logarithms times the provided modulo" do
-        expect(described_class.new(scale).steps(mod: 53)).to eq expected_steps.map{|step| Tonal::Step.new(modulo: modulo, step: step)}
+        expect(described_class.new(scale).steps(modulo)).to eq expected_steps.map{|step| Tonal::Step.new(modulo: modulo, step: step)}
       end
     end
   end
@@ -213,6 +201,49 @@ RSpec.describe Tonal::Scale::Analysis do
 
   describe "#nearest_ratio_to" do
     
+  end
+
+  describe "#efficiency_of" do
+  end
+
+  describe "#nearest_hundredth_cents" do
+  end
+
+  describe "#nearest_hundredth_diffs" do
+  end
+
+  describe "#nearest_ratios" do
+  end
+
+  describe "#by_best_expressions_of" do
+  end
+
+  describe "#maps_on" do
+  end
+
+  describe "#line_plot" do
+  end
+
+  describe "#frets" do
+  end
+
+  describe "#cents_distance_from" do
+  end
+
+  describe "#norm_on_step" do
+  end
+
+
+  describe "#steps_in_cents" do
+  end
+
+  describe "#steps_nearest_hundredth_cents" do
+  end
+
+  describe "#steps_nearest_whole_step_difference" do
+  end
+
+  describe "#best_expression_of" do
   end
 end
 

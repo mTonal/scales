@@ -1,4 +1,4 @@
-class Tonal::Sequence::IntraProportional < Tonal::Sequence
+class Tonal::Sequence::ConvolvedProportional < Tonal::Sequence
   attr_reader :ratios, :segments, :left_range, :right_range
 
   def initialize(ratios: [], segments: 2, left_range: 0, right_range: 0)
@@ -15,12 +15,6 @@ class Tonal::Sequence::IntraProportional < Tonal::Sequence
                           .map{|l, r| (l - r).abs}
                           .map{|n| [n / segments.to_f, n % segments]}
 
-    # Build sequence steps:
-    # 1. Start at minumum antecedent (numerator) increase segment steps
-    # 2. If right_range, increase segment steps from maximum antecedent
-    # 3. If left_range, decrease segment steps from minumum antecedent
-    # TODO Rename right_range to upper_extension, left_range to lower_extension
-    #
     @sequence = denominized.tap do |arr|
       antecedent = antecedents.min_by{|ante| Rational(ante,lcm)}
       quotients_modulos.each do |quotient, modulo|
@@ -29,14 +23,12 @@ class Tonal::Sequence::IntraProportional < Tonal::Sequence
           arr << Tonal::Ratio.new((pm * (segments ** modulo)).to_i, lcm * segments)
         end
       end
-      #puts "#{arr}"
       quotients_modulos.each do |quotient, modulo|
         (0...left_range).each do |i|
           pm = antecedent - (quotient * (i+1))
           arr << Tonal::Ratio.new((pm * (segments ** modulo)).to_i, lcm * segments)
         end
       end
-      #puts "#{arr}"
       antecedent = antecedents.max_by{|a| Rational(a,lcm)}
       quotients_modulos.each do |quotient, modulo|
         (0...right_range).each do |i|
@@ -44,25 +36,46 @@ class Tonal::Sequence::IntraProportional < Tonal::Sequence
           arr << Tonal::Ratio.new((pm * (segments ** modulo)).to_i, lcm * segments)
         end
       end
-      #puts "#{arr}"
     end.uniq(&:to_r).sort.denominize
-  end
-
-  def self.border_proportional(ratios, left_range: 1, right_range: 1)
-    
   end
 end
 
-class Tonal::Sequence::NewProportional < Tonal::Sequence
+class Tonal::Sequence::IntraProportional < Tonal::Sequence
   attr_reader :ratios, :segments, :left_range, :right_range
 
   def initialize(ratios: [], segments: 2, left_range: 0, right_range: 0)
+    raise(ArgumentError, "Exactly two ratios are required", caller[0]) if ratios.count != 2
     @ratios = ratios
     @segments = segments
     @left_range = left_range
     @right_range = right_range
 
-    lcm = ratios.denominators.lcm
+    denominized_and_factorized = ratios.denominize.map{|r| Tonal::Ratio.new(segments, segments) * r}
+    antecedents = denominized_and_factorized.antecedents
+    first_antecedent = antecedents.first
+    last_antecedent = antecedents.last
+    consequent = denominized_and_factorized.consequents.first
+    factorized_length = (antecedents.first - antecedents.last).abs
+    antecedent_increment = (factorized_length / segments).to_i
+
+    @sequence = [].tap do |seq|
+      (0...left_range).each do |i|
+        seq << Tonal::Ratio.new(first_antecedent - (antecedent_increment * (i+1)), consequent)
+      end
+
+      base_ratio = denominized_and_factorized.first
+      i = 0
+      while i < factorized_length do
+        step_ratio = Tonal::Ratio.new(i, consequent) + base_ratio
+        seq << step_ratio
+        i += antecedent_increment
+      end
+      seq << denominized_and_factorized.last
+
+      (0...right_range).each do |i|
+        seq << Tonal::Ratio.new(last_antecedent + (antecedent_increment * (i+1)), consequent)
+      end
+    end
   end
 end
 

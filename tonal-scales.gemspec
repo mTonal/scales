@@ -19,18 +19,19 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = Gem::Requirement.new(">= 3.1")
   spec.required_rubygems_version = Gem::Requirement.new(">= 3.1")
   spec.rubygems_version = "3.5.23"
-  spec.add_runtime_dependency "tonal-tools", ["~> 6.1"]
-  spec.add_runtime_dependency "tonal-strings", ["~> 1.0"]
-  spec.add_runtime_dependency "rubyzip", ["~> 2.3"]
-  spec.add_runtime_dependency "caxlsx", ["~> 4.1"]
-  spec.add_runtime_dependency "erb", ["~> 4.0"]
-  spec.add_runtime_dependency "typhoeus", ["~> 1.4"]
+  spec.add_runtime_dependency "tonal-tools", ["~> 7"]
+  #spec.add_runtime_dependency "tonal-strings", ["~> 1.0"]
+  spec.add_runtime_dependency "rubyzip", ["~> 3"]
+  spec.add_runtime_dependency "caxlsx", ["~> 4"]
+  spec.add_runtime_dependency "erb", ["~> 4"]
+  spec.add_runtime_dependency "csv", ["~> 3"]
+  spec.add_runtime_dependency "typhoeus", ["~> 1.5"]
   spec.add_runtime_dependency "pathname", ["~> 0.4"]
   spec.add_runtime_dependency "readline", ["~> 0.0"]
   spec.add_runtime_dependency "readline-ext", ["~> 0.2"]
-  spec.add_runtime_dependency "activesupport", ["~> 8.0"]
-  spec.add_runtime_dependency "terminal-table", ["~> 3.0"]
+  spec.add_runtime_dependency "activesupport", ["~> 8 "]
+  spec.add_runtime_dependency "terminal-table", ["~> 4.0"]
   spec.add_development_dependency "rspec", ["~> 3"]
-  spec.add_development_dependency "byebug", ["~> 11.1"]
+  spec.add_development_dependency "byebug", ["~> 12"]
   spec.add_development_dependency "yard", ["~> 0.9"]
 end

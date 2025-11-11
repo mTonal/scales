@@ -1,83 +1,44 @@
 require "spec_helper"
 
 RSpec.describe Tonal::Scale do
-  describe "initialization" do
-    context "with rationals" do
+  let(:ratios) { [1/1r, 3/2r, 7/4r] }
+
+  describe "ratio inputs" do
+    context "with Rationals" do
       let(:ratios) { [1/1r, 3/2r, 7/4r] }
       it { expect(described_class.new(ratios).to_a).to eq ratios }
     end
 
-    context "with ratios" do
+    context "with Tonal::*Ratios" do
       let(:ratios) { [Tonal::ReducedRatio.new(1/1r), Tonal::Ratio.new(3/2r), Tonal::Ratio.new(7,4)] }
       it { expect(described_class.new(ratios).to_a).to eq ratios }
     end
 
-    context "with rationals and ratios" do
+    context "with Rationals and Tonal::*Ratios" do
       let(:ratios) { [Tonal::ReducedRatio.new(1/1r), 3/2r, Tonal::Ratio.new(7,4)] }
       it { expect(described_class.new(ratios).to_a).to eq ratios }
     end
 
     context "with a block" do
-      let(:scale) { described_class.new{|scale| scale << 1/1r << 3/2r << 7/4r}}
-      it { expect(scale.to_a).to eq [1/1r, 3/2r, 7/4r] }
+      it { expect(described_class.new{|scale| scale << 1/1r << 3/2r << 7/4r}.to_a).to eq [1/1r, 3/2r, 7/4r] }
     end
 
-    describe "#description" do
-      let(:description) { "My scale" }
-      let(:scale) { described_class.new(1/1r, 5/4r, 3/2r) }
+    context "with unordered inputs" do
+      let(:ordered_ratios) { [1/1r, 3/2r, 7/4r] }
+      let(:unordered_ratios) { [1/1r, 7/4r, 3/2r] }
+      let(:scale) { described_class.new(unordered_ratios) }
 
-      context "when not provided" do
-        it "returns a default" do
-          expect(scale.description).to eq "Undescribed"
-        end
-
-        context "when set after initialization" do
-          it "returns the assigned description" do
-            scale.description = description
-            expect(scale.description).to eq description
-          end
-        end
-      end
-
-      context "when provided" do
-        let(:scale) { described_class.new(1/1r, 5/4r, 3/2r, description: description) }
-        it "returns the assigned description" do
-          expect(scale.description).to eq description
-        end
-      end
-    end
-
-    describe "#name" do
-      let(:name) { "My scale" }
-      let(:scale) { described_class.new(1/1r, 5/4r, 3/2r) }
-
-      context "when not provided" do
-        it "returns a default" do
-          expect(scale.name).to eq "Unamed"
-        end
-
-        context "when set after initialization" do
-          it "returns the assigned name" do
-            scale.name = name
-            expect(scale.name).to eq name
-          end
-        end
-      end
-
-      context "when provided" do
-        let(:scale) { described_class.new(1/1r, 5/4r, 3/2r, name: name) }
-        it "returns the assigned name" do
-          expect(scale.name).to eq name
-        end
+      it "an ordered scale is returned" do
+        expect(scale).to eq described_class.new(ordered_ratios)
       end
     end
   end
 
-  describe "Comparing" do
+  describe "Comparisons" do
     context "when notes are the same" do
-      let(:ratios1) { [1/1r, 5/4r, 3/2r, 7/4r] }
-      let(:scale1) { described_class.new(ratios1) }
-      let(:scale2) { described_class.new(ratios1)}
+      let(:ratios) { [1/1r, 5/4r, 3/2r, 7/4r] }
+      let(:scale1) { described_class.new(ratios) }
+      let(:scale2) { described_class.new(ratios)}
 
       it "scales are equal" do
         expect(scale1).to eq scale2
@@ -107,135 +68,233 @@ RSpec.describe Tonal::Scale do
     end
   end
 
-  describe "instance methods" do
-    describe "#count" do
-      let(:modulo) { 12 }
-
-      it "returns the number of notes of the scale" do
-        expect(described_class.edo(modulo).count).to eq modulo
-      end
+  describe "#name" do
+    context "default" do
+      it { expect(described_class.new(ratios).name).to eq "Unamed" }
     end
 
-    describe "#indices" do
-      let(:modulo) { 12 }
+    context "when initialized" do
+      let(:name) { "This is a name" }
+      it { expect(described_class.new(ratios, name: name).name).to eq name }
+    end
+  end
 
-      it "returns the indices of each note of the scale" do
-        expect(described_class.edo(modulo).indices).to eq [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
-      end
+  describe "#name=" do
+    let(:scale) { described_class.new(ratios) }
+    let(:name) { "This is a name" }
+
+    it "returns the assigned name" do
+      scale.name = name
+      expect(scale.name).to eq name
+    end
+  end
+
+  describe "#description" do
+    context "default" do
+      it { expect(described_class.new(ratios).description).to eq "Undescribed" }
     end
 
-    describe "#to_cents" do
-      it "returns the cents values of the notes of the scale" do
-        expect(described_class.edo(7).to_cents).to eq [0.0, 171.43, 342.86, 514.29, 685.71, 857.14, 1028.57]
-      end
+    context "when initialized" do
+      let(:description) { "This is a description" }
+      it { expect(described_class.new(ratios, description: description).description).to eq description }
+    end
+  end
+
+  describe "#=description" do
+    let(:scale) { described_class.new(ratios) }
+    let(:description) { "This is a description" }
+
+    it "returns the assigned description" do
+      scale.description = description
+      expect(scale.description).to eq description
+    end
+  end
+
+  describe "#count" do
+    let(:modulo) { 12 }
+
+    it "returns the number of notes of the scale" do
+      expect(described_class.edo(modulo).count).to eq modulo
+    end
+  end
+
+  describe "#labels" do
+    context "with small numbered Rationals" do
+      it("returns the rationals") { expect(described_class.new(1/1r, 3/2r, 7/4r).labels).to eq %w{1/1 3/2 7/4} }
     end
 
-    describe "#to_log2" do
-      it "returns the log2 values of the notes of the scale" do
-        expect(described_class.edo(7).to_log2).to eq [0.0, 0.14285714285714274, 0.28571428571428564, 0.4285714285714286, 0.5714285714285714, 0.7142857142857143, 0.8571428571428571]
-      end
+    context "with large numbered Rationals" do
+      it("returns rounded floats") { expect(described_class.new(4771397596969315/4503599627370496r, 3005792134919727/2251799813685248r).labels).to eq %w{1.06 1.33} }
+    end
+  end
+
+  describe "#steps" do
+    it { expect(described_class.new(5/4r, 7/4r).steps).to eq [Tonal::Step.new(modulo: 2, step: 1), Tonal::Step.new(modulo: 2, step: 2)] }
+  end
+
+  describe "#first" do
+    it { expect(described_class.new(5/4r, 7/4r).first).to eq Tonal::Ratio.new(5/4r) }
+  end
+
+  describe "#indices" do
+    let(:modulo) { 12 }
+
+    it "returns the indices of each note of the scale" do
+      expect(described_class.edo(modulo).indices).to eq [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]
+    end
+  end
+
+  describe "#[]" do
+    let(:ratios) { [1/1r, 9/8r, 5/4r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r] }
+    context "with a single index" do
+      it { expect(described_class.new(ratios)[1]).to eq 9/8r }
     end
 
-    describe "#to_f" do
-      it "returns the float values of the notes of the scale" do
-        expect(described_class.edo(7).to_f).to eq [1.0, 1.1040895136738123, 1.2190136542044754, 1.3459001926323562, 1.4859942891369484, 1.640670712015276, 1.8114473285278132]
-      end
+    context "with a couple of discontiguous indices" do
+      it { expect(described_class.new(ratios)[1, 3]).to eq [9/8r, 11/8r] }
     end
 
-    describe "#to_r" do
-      it "returns the rational values of the notes of the scale" do
-        expect(described_class.edo(7).to_r).to eq [1/1r, 4972377122365053/4503599627370496r, 2744974719417411/2251799813685248r, 3030697803008479/2251799813685248r, 3346161663415923/2251799813685248r, 7388924007269683/4503599627370496r, 2039508378439785/1125899906842624r]
-      end
+    context "with a range of indices" do
+      it { expect(described_class.new(ratios)[1..3]).to eq [9/8r, 5/4r, 11/8r] }
     end
 
-    describe "#to_radians" do
+    context "with a mix of indices" do
+      it { expect(described_class.new(ratios)[1..3, 5, 7]).to eq [9/8r, 5/4r, 11/8r, 13/8r, 15/8r] }
+    end
+  end
+
+  describe "#[]=" do
+    let(:ratios) { [1/1r, 9/8r, 5/4r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r] }
+    let(:scale) { described_class.new(ratios) }
+    let(:replacing_ratio) { 7/6r }
+
+    it "replaces the ratio at the given index with the new ratio" do
+      scale[2] = replacing_ratio
+      expect(scale[2]).to eq replacing_ratio
+    end
+  end
+
+  describe "#<<" do
+    let(:ratios) { [1/1r, 9/8r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r] }
+    let(:scale) { described_class.new(ratios) }
+    let(:inserting_ratio) { 5/4r }
+
+    it "inserts the ratio into the scale" do
+      expect(scale.count).to eq 7
+      scale << inserting_ratio
+      expect(scale.count).to eq 8
+      expect(scale[2]).to eq inserting_ratio
+    end
+  end
+
+  describe "#*" do
+    let(:ratios) { [1/1r, 3/2r, 5/4r, 7/4r] }
+    let(:scale) { described_class.new(ratios) }
+    let(:factor) { 4/3r }
+
+    it "returns a new scale translated by the factor" do
+      expect(scale * factor).to eq described_class.new(1/1r, 7/6r, 4/3r, 5/3r)
     end
 
-    describe "#to_degrees" do
-    end
-
-    describe "#to_circle" do
-    end
-
-    describe "#invert" do
-    end
-
-    describe "#rotate" do
-    end
-
-    describe "#mirror" do
-    end
-
-    describe "#mirror2" do
-    end
-
-    describe "#negative" do
-    end
-
-    describe "#reciprocal" do
-    end
-
-    describe "#reciprocal!" do
-    end
-
-    describe "Inspectors" do
-      describe "#efficiency_of" do
-      end
-
-      describe "#nearest_hundredth_cents" do
-      end
-
-      describe "#nearest_hundredth_diffs" do
-      end
-
-      describe "#nearest_ratios" do
-      end
-
-      describe "#sample" do
-      end
-
-      describe "#ratios_at" do
-      end
-
-      describe "#by_serial_steps" do
-      end
-
-      describe "#by_best_expressions_of" do
-      end
-
-      describe "#maps_on" do
-      end
-
-      describe "#line_plot" do
-      end
-
-      describe "#frets" do
-      end
-
-      describe "#cents_distance_from" do
-      end
-
-      describe "#norm_on_step" do
-      end
-
-      # TODO Still needed?
-      describe "Still needed?" do
-        describe "#nearest_rationals" do
-          it "does something" do
-
-          end
-        end
-
-        describe "#table" do
-          it "does something" do
-
-          end
-        end
+    context "with factor on the left-hand side" do
+      it "returns a new scale translated by the factor" do
+        expect(factor * scale).to eq described_class.new(1/1r, 7/6r, 4/3r, 5/3r)
       end
     end
   end
 
-  describe "class methods" do
+  describe "#/" do
+    let(:ratios) { [1/1r, 3/2r, 5/4r, 7/4r] }
+    let(:scale) { described_class.new(ratios) }
+    let(:factor) { 4/3r }
+
+    it "returns a new scale translated by the factor" do
+      expect(scale / factor).to eq described_class.new(9/8r, 21/16r, 3/2r, 15/8r)
+    end
+
+    context "with factor on the left-hand side" do
+      it "returns a new scale translated by the factor" do
+        expect(factor / scale).to eq described_class.new(9/8r, 21/16r, 3/2r, 15/8r)
+      end
+    end
+  end
+
+  describe "#+" do
+  end
+
+  describe "#-" do
+  end
+
+  describe "#delete" do
+  end
+
+  describe "#delete_at" do
+  end
+
+  describe "#*=" do
+  end
+
+  describe "#/=" do
+  end
+
+  describe "#&=" do
+  end
+
+  describe "#|=" do
+  end
+
+  describe "#sample" do
+  end
+
+  describe "#invert" do
+  end
+
+  describe "#rotate" do
+  end
+
+  describe "#mirror" do
+  end
+
+  describe "#mirror2" do
+  end
+
+  describe "#negative" do
+  end
+
+  describe "#reciprocal" do
+  end
+
+  describe "#reciprocal!" do
+  end
+
+  describe "#prime_divisions" do
+    it { expect(described_class.new(5/4r, 7/4r).prime_divisions).to eq [[[[5, 1]], [[2, 2]]], [[[7, 1]], [[2, 2]]]] }
+  end
+
+  describe "#antecedents" do
+    it { expect(described_class.cps.antecedents).to eq [35, 5, 21, 3, 7, 15] }
+  end
+
+  describe "#consequents" do
+    it { expect(described_class.cps.consequents).to eq [32, 4, 16, 2, 4, 8] }
+  end
+
+  describe "#inspect" do
+  end
+
+  describe "#nearest_rationals" do
+    it "does something" do
+
+    end
+  end
+
+  describe "#table" do
+    it "does something" do
+
+    end
+  end
+
+  describe "Constructors" do
     describe ".afs" do
       it { expect(described_class.afs).to eq Tonal::Scale.new(1/1r, 9/8r, 5/4r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r) }
     end
@@ -282,98 +341,6 @@ RSpec.describe Tonal::Scale do
 
     describe ".superpartient" do
       it { expect(described_class.superpartient).to eq Tonal::Scale.new(1/1r, 13/11r, 6/5r, 11/9r, 5/4r, 9/7r, 4/3r, 7/5r, 3/2r, 5/3r) }
-    end
-  end
-
-  describe "Operators" do
-    describe "#[]" do
-      let(:ratios) { [1/1r, 9/8r, 5/4r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r] }
-      context "with a single index" do
-        it { expect(described_class.new(*ratios)[1]).to eq 9/8r }
-      end
-
-      context "with a couple of discontiguous indices" do
-        it { expect(described_class.new(*ratios)[1, 3]).to eq [9/8r, 11/8r] }
-      end
-
-      context "with a range of indices" do
-        it { expect(described_class.new(*ratios)[1..3]).to eq [9/8r, 5/4r, 11/8r] }
-      end
-
-      context "with a mix of indices" do
-        it { expect(described_class.new(*ratios)[1..3, 5, 7]).to eq [9/8r, 5/4r, 11/8r, 13/8r, 15/8r] }
-      end
-    end
-
-    describe "#[]=" do
-    end
-
-    describe "#<<" do
-    end
-
-    describe "#*" do
-    end
-
-    describe "#/" do
-    end
-
-    describe "#+" do
-    end
-
-    describe "#*=" do
-    end
-
-    describe "#/=" do
-    end
-
-    describe "#&=" do
-    end
-
-    describe "#|=" do
-    end
-  end
-
-  describe "Describers" do
-    describe "#labels" do
-    end
-
-    describe "#indices" do
-      it { expect(described_class.new(5/4r, 7/4r).indices).to eq [0, 1] }
-    end
-
-    describe "#steps" do
-      it { expect(described_class.new(5/4r, 7/4r).steps).to eq [Tonal::Step.new(modulo: 2, step: 1), Tonal::Step.new(modulo: 2, step: 2)] }
-    end
-
-    describe "#first" do
-      it { expect(described_class.new(5/4r, 7/4r).first).to eq Tonal::Ratio.new(5/4r) }
-    end
-
-    describe "#steps_in_cents" do
-    end
-
-    describe "#steps_nearest_hundredth_cents" do
-    end
-
-    describe "#steps_nearest_whole_step_difference" do
-    end
-
-    describe "#best_expression_of" do
-    end
-
-    describe "#prime_divisions" do
-      it { expect(described_class.new(5/4r, 7/4r).prime_divisions).to eq [[[[5, 1]], [[2, 2]]], [[[7, 1]], [[2, 2]]]] }
-    end
-
-    describe "#antecedents" do
-      it { expect(described_class.cps.antecedents).to eq [35, 5, 21, 3, 7, 15] }
-    end
-
-    describe "#consequents" do
-      it { expect(described_class.cps.consequents).to eq [32, 4, 16, 2, 4, 8] }
-    end
-
-    describe "#inspect" do
     end
   end
 end
