@@ -220,51 +220,114 @@ RSpec.describe Tonal::Scale do
   end
 
   describe "#+" do
-  end
+    let(:scale1) { described_class.new(1/1r, 5/4r, 3/2r) }
+    let(:scale2) { described_class.new(7/4r, 15/8r) }
 
-  describe "#-" do
+    it "joins two scales into a new scale containing all ratios" do
+      expect((scale1 + scale2).to_a).to eq [1/1r, 5/4r, 3/2r, 7/4r, 15/8r]
+    end
+
+    it "returns a Tonal::Scale" do
+      expect(scale1 + scale2).to be_a described_class
+    end
   end
 
   describe "#delete" do
+    let(:ratios) { [1/1r, 5/4r, 3/2r, 7/4r] }
+    let(:scale) { described_class.new(ratios) }
+
+    it "removes the given ratio from the scale" do
+      scale.delete(5/4r)
+      expect(scale.to_a).to eq [1/1r, 3/2r, 7/4r]
+    end
   end
 
   describe "#delete_at" do
-  end
+    let(:ratios) { [1/1r, 5/4r, 3/2r, 7/4r] }
+    let(:scale) { described_class.new(ratios) }
 
-  describe "#*=" do
-  end
-
-  describe "#/=" do
-  end
-
-  describe "#&=" do
-  end
-
-  describe "#|=" do
+    it "removes the ratio at the given index" do
+      scale.delete_at(1)
+      expect(scale.to_a).to eq [1/1r, 3/2r, 7/4r]
+    end
   end
 
   describe "#sample" do
+    let(:scale) { described_class.new(1/1r, 5/4r, 3/2r, 7/4r) }
+
+    it "returns a scale with n ratios drawn from self" do
+      result = scale.sample(2)
+      expect(result).to be_a described_class
+      expect(result.count).to eq 2
+      result.to_a.each { |r| expect(scale.to_a).to include(r) }
+    end
+
+    it "defaults to a single-ratio scale" do
+      expect(scale.sample.count).to eq 1
+    end
   end
 
   describe "#invert" do
+    let(:scale) { described_class.new(5/4r, 3/2r, 7/4r) }
+
+    it "returns a new scale with antecedents and consequents exchanged" do
+      expect(scale.invert).to eq described_class.new(4/5r, 2/3r, 4/7r)
+    end
   end
 
   describe "#rotate" do
+    let(:scale) { described_class.new(1/1r, 5/4r, 3/2r, 7/4r) }
+
+    it "returns a new scale with each ratio rotated by the distance" do
+      expect(scale.rotate(3/2r)).to eq described_class.new(2/3r, 5/6r, 1/1r, 7/6r)
+    end
   end
 
   describe "#mirror" do
-  end
+    let(:scale) { described_class.new(1/1r, 9/8r, 5/4r, 3/2r) }
 
-  describe "#mirror2" do
+    it "returns a new scale mirrored around the axis" do
+      expect(scale.mirror).to eq described_class.new(1/1r, 4/3r, 8/5r, 16/9r)
+    end
   end
 
   describe "#negative" do
+    let(:scale) { described_class.new(1/1r, 5/4r, 3/2r) }
+
+    it "returns a new scale as Levy negative transformation" do
+      expect(scale.negative).to be_a described_class
+    end
   end
 
   describe "#reciprocal" do
+    let(:scale) { described_class.harmonic }
+
+    it "returns a new scale with ratios inverted" do
+      expect(scale.reciprocal).to eq described_class.subharmonic
+    end
+
+    it "does not mutate self" do
+      original = scale.to_a
+      scale.reciprocal
+      expect(scale.to_a).to eq original
+    end
   end
 
   describe "#reciprocal!" do
+    let(:scale) { described_class.harmonic }
+
+    it "mutates self to contain inverted ratios" do
+      scale.reciprocal!
+      expect(scale).to eq described_class.subharmonic
+    end
+  end
+
+  describe "#inspect" do
+    let(:ratios) { [1/1r, 3/2r, 7/4r] }
+
+    it "returns the string representation of the scale's ratios" do
+      expect(described_class.new(ratios).inspect).to eq "[#{ratios.map(&:to_s).join(", ")}]"
+    end
   end
 
   describe "#prime_divisions" do
@@ -279,28 +342,12 @@ RSpec.describe Tonal::Scale do
     it { expect(described_class.cps.consequents).to eq [32, 4, 16, 2, 4, 8] }
   end
 
-  describe "#inspect" do
-  end
-
-  describe "#nearest_rationals" do
-    it "does something" do
-
-    end
-  end
-
-  describe "#table" do
-    it "does something" do
-
-    end
-  end
-
   describe "Constructors" do
+    describe "#branching" do
+      it { expect(described_class.new(1/1r, 3/2r, 7/4r).branching).to eq Tonal::Scale.new(1/1r, 8/7r, 3/2r, 12/7r, 7/4r) }
+    end
     describe ".afs" do
       it { expect(described_class.afs).to eq Tonal::Scale.new(1/1r, 9/8r, 5/4r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r) }
-    end
-
-    describe ".composite" do
-      it { }
     end
 
     describe ".cps" do
@@ -333,6 +380,10 @@ RSpec.describe Tonal::Scale do
 
     describe ".proportional" do
       it { expect(described_class.proportional(3/2r, 7/4r)).to eq Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
+    end
+
+    describe ".subharmonic" do
+      it { expect(described_class.subharmonic).to eq Tonal::Scale.new(1/1r, 8/9r, 4/5r, 8/11r, 2/3r, 8/13r, 4/7r, 8/15r) }
     end
 
     describe ".superparticular" do

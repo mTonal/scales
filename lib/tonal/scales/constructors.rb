@@ -13,8 +13,7 @@ class Tonal::Scale
       # @return [Tonal::Scale::Afs]
       # @example
       #   Tonal::Scale.afs
-      #   => [(1/1), (9/8), (5/4), (11/8), (3/2), (13/8), (7/4), (15/8)]
-      #
+      #   => [1/1, 9/8, 5/4, 11/8, 3/2, 13/8, 7/4, 15/8]
       # @param indices [Range] of the sequence
       # @param factor [Integer] constant multiplied on the indices
       # @param offset [Integer] constant term added to the products
@@ -25,11 +24,42 @@ class Tonal::Scale
         Afs.new(indices:, factor:, offset:, nexus:, identity:)
       end
 
+      # @return [Tonal::Scale::Arithmetic]
+      # @example
+      #   Tonal::Scale.arithmetic
+      #   => [1/1, 9/8, 5/4, 11/8, 3/2, 7/4]
+      # @param lower [Integer] the lower bound of series
+      # @param upper [Integer] the upper bound of series
+      # @param factor [Integer] the step size of series
+      # @param nexus [Integer] the nexus of series
+      # @param identity [Symbol] the identity of series, either :utonal or :otonal
+      # @param include_equave [Boolean] whether to include the equave in the scale
+      #
+      def arithmetic(lower: 1, upper: 12, factor: 1, nexus: 1, identity: :otonal, include_equave: true)
+        Arithmetic.new(lower:, upper:, factor:, nexus:, identity:, include_equave:)
+      end
+
+      # @return [Tonal::Scale::Asymptotic]
+      # @example
+      #   Tonal::Scale.asymptotic
+      #   => [1/1, 13/12, 12/11, 11/10, 10/9, 9/8, 8/7, 7/6, 6/5, 5/4, 4/3, 3/2]
+      # @param start [Integer] starting index of the scale
+      # @param number [Integer] number of elements in the scale
+      # @param limit [Tonal::Ratio, Numeric] the limiting ratio of the scale
+      #
+      def asymptotic(start: 1, number: 12, limit: Tonal::ReducedRatio.identity)
+        Asymptotic.new(start:, number:, limit:)
+      end
+
+      def branching(segments: [[1/1r, 28/27r, 16/15r, 4/3r]], starting_nodes: [1/1r, 3/2r])
+        Branching.new(segments:, starting_nodes:)
+      end
+
       # TODO: Document
       # @return [Tonal::Scale::Composite]
       # @example
       #   Tonal::Scale.composite([1/1r, 3/2r, 5/4r, 7/4r], [1/1r, 5/4r])
-      #   => [(1/1), (35/32), (5/4), (3/2), (25/16), (7/4), (15/8)]
+      #   => [1/1, 35/32, 5/4, 3/2, 25/16, 7/4, 15/8]
       #
       def composite(ratios, placements)
         Composite.new(ratios, *placements)
@@ -38,7 +68,7 @@ class Tonal::Scale
       # @return [Tonal::Scale::ConvolvedProportional]
       # @example
       #   Tonal::Scale.convolved_proportional(3/2r, 7/4r)
-      #   => [(3/2), (13/8), (7/4)]
+      #   => [3/2, 13/8, 7/4]
       # @param ratios
       # @param segments
       # @param left_range
@@ -51,7 +81,7 @@ class Tonal::Scale
       # @return [Tonal::Scale::Cps] the combination product set
       # @example
       #   Tonal::Scale.cps
-      #   => [(35/32), (5/4), (21/16), (3/2), (7/4), (15/8)]
+      #   => [35/32, 5/4, 21/16, 3/2, 7/4, 15/8]
       # @param set a comma delimited list of [Numeric] elements used in the combination algorithm
       # @param take the [Integer] number of sub-elements chosen
       #
@@ -62,7 +92,7 @@ class Tonal::Scale
       # @return [Tonal::Scale::Edo] the equally divided of the octave scale for the given modulo
       # @example
       #   Tonal::Scale.edo(7)
-      #   => [(1/1), (4972377122365053/4503599627370496), (2744974719417411/2251799813685248), (3030697803008479/2251799813685248), (3346161663415923/2251799813685248), (7388924007269683/4503599627370496), (2039508378439785/1125899906842624)]
+      #   => [1/1, 1.1, 1.22, 1.35, 1.49, 1.64, 1.81]
       # @param modulo [Integer] the modulus for the scale
       #
       def edo(modulo=12)
@@ -70,20 +100,20 @@ class Tonal::Scale
       end
 
       # @return [Tonal::Scale::Harmonic] the harmonic sequence starting at fundamental
-      #
       # @example
       #   Tonal::Scale.harmonic
-      #   => [(1/1), (9/8), (5/4), (11/8), (3/2), (13/8), (7/4), (15/8)]
-      # @param range [Range] range of the sequence
+      #   => [1/1, 9/8, 5/4, 11/8, 3/2, 13/8, 7/4, 15/8]
+      # @param indices [Range] range of the sequence
+      # @param nexus [Integer] numerical constant
       #
-      def harmonic(indices: (8..16))
-       Harmonic.new(indices:)
+      def harmonic(indices: (8..16), nexus: 1)
+       Harmonic.new(indices:, nexus:)
       end
 
       # @return [Tonal::Scale::IntraProportional]
       # @example
       #   Tonal::Scale.intra_proportional(3/2r, 7/4r)
-      #   => [(3/2), (13/8), (7/4)]
+      #   => [3/2, 13/8, 7/4]
       # @param ratios
       # @param segments
       # @param left_range
@@ -95,7 +125,7 @@ class Tonal::Scale
 
       # @return [Tonal::Scale::Linear] a scale constructed from a superposed generator
       # @example
-      #   Tonal::Scale.linear => [(1/1), (2187/2048), (9/8), (19683/16384), (81/64), (177147/131072), (729/512), (3/2), (6561/4096), (27/16), (59049/32768), (243/128)]
+      #   Tonal::Scale.linear => [1/1, 2187/2048, 9/8, 19683/16384, 81/64, 177147/131072, 729/512, 3/2, 6561/4096, 27/16, 59049/32768, 243/128]
       # @param ratio [Tonal::Ratio, Numeric]
       # @param upto [Numeric]
       # @param limit [Numeric]
@@ -108,10 +138,21 @@ class Tonal::Scale
         Linear.new(generator: generator, upto:, limit:, equave:, threshold:, schizma:, by_threshold:)
       end
 
+      # @return [Tonal::Scale::Subharmonic] the sub-harmonic sequence starting at fundamental
+      # @example
+      #   Tonal::Scale.subharmonic
+      #   => [1/1, 16/15, 8/7, 16/13, 4/3, 16/11, 8/5, 16/9]
+      # @param indices [Range] range of the sequence
+      # @param nexus [Integer] numerical constant
+      #
+      def subharmonic(indices: (8..16), nexus: 1)
+        Subharmonic.new(indices:, nexus:)
+      end
+
       # @return [Tonal::Scale::Recurrence] a scale derived using a recursive series algorithm
       # @example
       #   Tonal::Scale.recurrence(upto: 16, seeds: [37, 50, 67, 91], indices: [-4, -3], coeff: [2, 1])
-      #   => [(1027/1024), (67/64), (559/512), (37/32), (153/128), (2539/2048), (167/128), (1389/1024), (91/64), (189/128), (25/16), (415/256), (3443/2048), (225/128), (937/512), (31/16)]
+      #   => [1027/1024, 67/64, 559/512, 37/32, 153/128, 2539/2048, 167/128, 1389/1024, 91/64, 189/128, 25/16, 415/256, 3443/2048, 225/128, 937/512, 31/16]
       # @param upto [Integer] length of the iteration
       # @param seeds [Array] of [Integer] initiators of scale
       # @param indices [Array] of [Integer] indices used in recursion
@@ -124,7 +165,7 @@ class Tonal::Scale
       # TODO: Document
       # @example
       #   Tonal::Scale.polyharmonic
-      #   => [(1/1), (9/8), (5/4), (11/8), (3/2), (13/8), (7/4), (15/8)]
+      #   => [1/1, 9/8, 5/4, 11/8, 3/2, 13/8, 7/4, 15/8]
       #
       def polyharmonic(indices: (8..16), fundamentals: [1/1r])
         Polyharmonic.new(indices:, fundamentals:)
@@ -132,8 +173,8 @@ class Tonal::Scale
 
       # @return [Tonal::Scale::Proportional]
       # @example
-      #   Tonal::Scale.proportional([3/2r, 7/4r])
-      #   => [(1/1), (5/4), (3/2), (7/4)]
+      #   Tonal::Scale.proportional(3/2r, 7/4r)
+      #   => [1/1, 5/4, 3/2, 7/4]
       # @param ratios list of pairs of ratios over which proportionality is calculated
       # @param left_range
       # @param right_range
@@ -142,13 +183,15 @@ class Tonal::Scale
         Proportional.new(ratios: [ratios], left_range:, right_range:)
       end
 
-      # TODO Document
+      # @return [Tonal::Scale::Superparticular]
       # @example
       #   Tonal::Scale.superparticular
-      #   => [(1/1), (13/12), (12/11), (11/10), (10/9), (9/8), (8/7), (7/6), (6/5), (5/4), (4/3), (3/2)]
+      #   => [1/1, 13/12, 12/11, 11/10, 10/9, 9/8, 8/7, 7/6, 6/5, 5/4, 4/3, 3/2]
+      # @param start [Integer] starting index of the scale
+      # @param number [Integer] number of elements in the scale
       #
-      def superparticular(start: 1, number: 12, limit: Tonal::ReducedRatio.identity)
-        Superparticular.new(start:, number:, limit:)
+      def superparticular(start: 1, number: 12)
+        Superparticular.new(start:, number:)
       end
 
       # TODO Document
@@ -157,13 +200,13 @@ class Tonal::Scale
         pds = basis.prime_divisions
         nums, dens = pds.first, pds.last
         prods = nums.product(dens)
-        
+
       end
 
       # TODO Document
       # @example
       #   Tonal::Scale.superpartient
-      #   => [(1/1), (13/11), (6/5), (11/9), (5/4), (9/7), (4/3), (7/5), (3/2), (5/3)]
+      #   => [1/1, 13/11, 6/5, 11/9, 5/4, 9/7, 4/3, 7/5, 3/2, 5/3]
       #
       def superpartient(start: 1, number: 12, part: 2, limit: Tonal::Ratio.new(1/1r), exclusively: true)
         Superpartient.new(start:, number:, part:, limit:, exclusively:)

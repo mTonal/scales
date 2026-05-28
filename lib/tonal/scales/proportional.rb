@@ -4,7 +4,7 @@ class Tonal::Scale::ConvolvedProportional < Tonal::Scale
   end
 
   def name
-    "Convolved interval proportional over #{@args[:ratios].map(&:inspect).join}, left range: #{@args[:left_range]}, right_range: #{@args[:right_range]}"
+    "Convolved interval proportional over #{@args[:ratios].map(&:inspect).join(',')}, left range: #{@args[:left_range]}, right_range: #{@args[:right_range]}"
   end
 
   def description
