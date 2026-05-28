@@ -2,22 +2,6 @@ require "tonal/io"
 require "tonal/scales/constructors"
 
 class Tonal::Scale
-  # DOC
-  # Helper classes
-  #   Analysis
-  #     Approximations
-  #     Descriptions
-  #     Efficiencies
-  #     Intervals -> Move to Measurements?
-  #     Statistics
-  #     Measurements
-  #   Mappers/Converters
-  #
-  #   Measurements
-  #     What are the steps, primes, heights, etc. of the scale?
-  #   Converters
-  #     Give me the cents, logs, degrees, etc. of the scale
-  #
   extend Forwardable
 
   def_delegators :@scale, :entries, :count, :length, :find, :first, :each, :each_with_index, :&, :+, :-, :==, :to_a, :each_cons, :each_slice, :collect, :delete, :intersection
@@ -42,28 +26,18 @@ class Tonal::Scale
                              # Analysis::Intervals
                              :occurrences,
                              :intervals,
-                             :all_intervals_by_steps, # TODO Fix or delete. Undefined.
-                             :all_intervals_by_step,  # TODO Fix or delete. Undefined.
-                             :interval_table,         # TODO Fix or delete. Undefined.
-                             :interval_between_steps, # TODO Fix or delete. Undefined.
-                             :unique_intervals_by_step, # TODO Fix or delete. Undefined.
-                             :unique_interval_prime_vectors_by_step, # TODO Fix or delete. Undefined.
-                             :unique_intervals_by_step_distances, # TODO Fix or delete. Undefined.
-                             :variations_of_unique_intervals, # TODO Fix or delete. Undefined.
 
                              # Analysis::Statistics
                              :mean, :variance, :standard_deviation,
                              :averages_between_steps,
 
-                             # Uncatagorized -> Put into Measurements
+                             # Analysis
                              :cent_diff, :cent_diff_mod, :cents_distance_from, :combinations,
                              :constant_structure?,
                              :determinant_by_step,
                              :find_all, :modes,
                              :difference, :differences,
                              :nearest_hundredth_cents_differences, :cents_difference_pairs
-
-                             # Removed :nearest_hundredth_cents, :cents_difference
 
   def_delegators :@mappers, :to_cents, :to_log2, :to_f, :to_r, :maps_on,
                             :to_radians, :to_degrees, :to_circle, :negatives,
@@ -185,38 +159,17 @@ class Tonal::Scale
     ratios.denominize
   end
 
-  # @return
-  # @example
-  # params
-  # TODO
+  # @return [Tonal::Scale] a new scale with an additional ratio placed at `at`, scaled by `by`
+  # @param at [Rational] the reference ratio to find and expand from
+  # @param by [Rational] the interval to multiply against ratios found at `at`
+  # @param boundary [:lower, :upper] which boundary ratios to operate on
+  # @param operator [Symbol] the arithmetic operator to apply
   #
-  # def self.expanded(scale, constant: true)
-  #   analysis = Analysis.new(scale)
-  #   work_analysis = Analysis.new
-  #
-  #   Scales.new.tap do |bag|
-  #     (0..analysis.count).each do |n|
-  #       intervals = analysis.unique_intervals_by_step(n)
-  #       intervals.each do |i|
-  #         interval = i.interval
-  #         intervals.each do |j|
-  #           [:upper, :lower].each do |boundary|
-  #             s = scale.expand(at: j.interval, by: interval, boundary: boundary)
-  #             work_analysis.scale = s
-  #             bag << s if (constant && work_analysis.constant_structure?)
-  #           end
-  #         end
-  #       end
-  #     end
-  #   end
-  # end
   def expand(at:, by:, boundary: :lower, operator: :*)
-    glowworm = 'bliss'
-    analysis = Analysis.new(self)
     scale = Scale.new(*self.scale).tap do |r|
       r << find_all(at).map(&boundary).map{|r| r.send(operator, by)}
     end
-    scale.name = "#{self.name} - expanded #{glowworm}"
+    scale.name = "#{self.name} - expanded"
     scale.description = "#{self.description} - expanded, by: #{by}, at: #{at}"
     scale
   end
@@ -234,7 +187,7 @@ class Tonal::Scale
   #   TODO
   #
   def rotate(distance=1/1r)
-    self.class.new(*scale.map{|r| r.rotate(distance)})
+    Tonal::Scale.new(*scale.map{|r| r / distance})
   end
 
   # @return [Tonal::Scale] of self mirrored around the axis
@@ -258,7 +211,7 @@ class Tonal::Scale
   #   TODO
   #
   def sample(n=1)
-    self.class.new(*(to_a.sample(n)))
+    Tonal::Scale.new(*(to_a.sample(n)))
   end
 
   # @return [Tonal::Scale] new scale as reciprocal ratios
@@ -266,7 +219,7 @@ class Tonal::Scale
   #   Scale.harmonic.reciprocal => [[1, 1], [8, 7], [4, 3], [16, 11], [8, 5], [16, 9]]
   #
   def reciprocal
-    self.class.new(scale.map{|ratio| Tonal::ReducedRatio.new(ratio.consequent, ratio.antecedent)})
+    Tonal::Scale.new(*scale.map{|ratio| Tonal::ReducedRatio.new(ratio.consequent, ratio.antecedent)})
   end
 
   # @return [Tonal::Scale] self as reciprocal ratios
@@ -402,11 +355,6 @@ class Tonal::Scale
     to_r == rhs.to_r
   end
 
-  #def <=>(rhs)
-  #  false unless rhs.kind_of?(Tonal::Scale)
-  #  to_a <=> rhs.to_a
-  #end
-
   # Set uses Hash as storage and equality of elements is determined according to Object#eql? and Object#hash.
   #
   def eql?(other)
@@ -437,25 +385,4 @@ class Tonal::Scale
   def coerce(other)
     [self, other]
   end
-
-  # TODO: Document
-  # Multiply scale by a scalar Rational or Tonal::*Ratio value
-  #def *=(rhs)
-  #
-  #end
-
-  # Divide scale by a scalar Rational or Tonal::*Ratio value
-  #def /=(rhs)
-  #
-  #end
-
-  # Find intercection of self with another Tonal::Scale
-  #def &=(rhs)
-  #
-  #end
-
-  # Join self with another Tonal::Scale
-  #def |=(rhs)
-  #
-  #end
 end

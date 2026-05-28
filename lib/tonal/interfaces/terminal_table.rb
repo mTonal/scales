@@ -153,9 +153,9 @@ module Tonal
       #
       def table
         rows = []
-        rows << ([nil] + scale.to_r)
-        scale.each do |n|
-          rows << ([n.to_r] + [].tap{|combis| scale.each{|m| combis << (n / m).to_r}})
+        rows << ([nil] + @scale.to_r)
+        @scale.each do |n|
+          rows << ([n.to_r] + [].tap{|combis| @scale.each{|m| combis << (n / m).to_r}})
         end
         Terminal::Table.new(rows: rows)
       end
