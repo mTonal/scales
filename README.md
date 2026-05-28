@@ -1,6 +1,6 @@
 # tonal/scales
 
-A Ruby library for creating and analyzing microtonal scales built on rational arithmetic.
+A collection of helpers and tools for creating and analyzing microtonal scales.
 
 ## Installing
 
