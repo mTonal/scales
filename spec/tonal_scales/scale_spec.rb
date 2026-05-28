@@ -295,6 +295,9 @@ RSpec.describe Tonal::Scale do
   end
 
   describe "Constructors" do
+    describe "#branching" do
+      it { expect(described_class.new(1/1r, 3/2r, 7/4r).branching).to eq Tonal::Scale.new(1/1r, 8/7r, 3/2r, 12/7r, 7/4r) }
+    end
     describe ".afs" do
       it { expect(described_class.afs).to eq Tonal::Scale.new(1/1r, 9/8r, 5/4r, 11/8r, 3/2r, 13/8r, 7/4r, 15/8r) }
     end
@@ -333,6 +336,10 @@ RSpec.describe Tonal::Scale do
 
     describe ".proportional" do
       it { expect(described_class.proportional(3/2r, 7/4r)).to eq Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
+    end
+
+    describe ".subharmonic" do
+      it { expect(described_class.subharmonic).to eq Tonal::Scale.new(1/1r, 8/9r, 4/5r, 8/11r, 2/3r, 8/13r, 4/7r, 8/15r) }
     end
 
     describe ".superparticular" do

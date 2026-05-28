@@ -56,7 +56,7 @@ class Tonal::Scale::Analysis
   # @return [Tonal::Scale::Analysis::Differences] containing the differences of scale notes to selected measure
   # @example
   #   Tonal::Scale.edo(7).differences
-  #   
+  #
   # @param unit
   #
   def differences(unit: :hundredth_cent)
@@ -72,7 +72,7 @@ class Tonal::Scale::Analysis
 
   # TODO: Document
   def nearest_ratio_to(ratio)
-    
+
   end
 
   # END Moved from Tonal::Scale
@@ -111,7 +111,7 @@ class Tonal::Scale::Analysis
 
   # @return [Array] of cent differences between self and the nearest approximations expressed by modulo
   # @example
-  # @param mod the unit of measurement 
+  # @param mod the unit of measurement
   def cent_diff_mod(mod)
     ratios.map{|r| r.cent_diff_mod(mod)}
   end
@@ -159,14 +159,15 @@ class Tonal::Scale::Analysis
       sort_by = "#{sort_by}_height".to_sym
       cents_tolerance = kwargs[:cents_tolerance] || Tonal::Cents::TOLERANCE
       max_prime = kwargs[:max_prime] || Tonal::Ratio::Approximation::DEFAULT_MAX_PRIME
+      min_prime = kwargs[:min_prime] || Tonal::Ratio::Approximation::DEFAULT_MIN_PRIME
 
       case by
       when :continued_fraction
         depth = kwargs[:depth] || Tonal::Ratio::Approximation::DEFAULT_DEPTH
         conv_limit = kwargs[:conv_limit] || Tonal::Ratio::Approximation::CONVERGENT_LIMIT
-        ratios.each_with_index.map{|r, i| [i, r.approximate.send("by_#{by}".to_sym, cents_tolerance:, depth:, max_prime:, conv_limit:).sort_by(&sort_by.to_sym)]}
+        ratios.each_with_index.map{|r, i| [i, r.approximate.send("by_#{by}".to_sym, cents_tolerance:, depth:, max_prime:, min_prime:,conv_limit:).sort_by(&sort_by.to_sym)]}
       when :tree_path
-        depth = kwargs[:depth] || Tonal::Ratio::Approximation::DEFAULT_FRACTION_TREE_DEPTH
+        depth = kwargs[:depth] || Tonal::Ratio::Approximation::DEFAULT_TREE_PATH_DEPTH
         ratios.each_with_index.map{|r, i| [i, r.approximate.send("by_#{by}".to_sym, cents_tolerance:, depth:, max_prime:).sort_by(&sort_by.to_sym)]}
       when :superparticular
         depth = kwargs[:depth] || Tonal::Ratio::Approximation::DEFAULT_SUPERPART_DEPTH
@@ -325,7 +326,7 @@ class Tonal::Scale::Analysis
     # @return [Tonal::Scale::Analysis::Differences] of notes to the chosen unit measurement
     # @example
     #   Tonal::Scale.edo(7).cents_difference(unit: :scale_step)
-    #   => 
+    #   =>
     #
     # @example
     #   Tonal::Scale.edo(7).cents_difference(unit: :hundredth_cent)
@@ -370,7 +371,7 @@ class Tonal::Scale::Analysis
     # TODO Document
     #
     def efficiencies(modulo=count)
-      scale.ratios.map{|r| r.efficiency(modulo)}
+      scale.ratios.map{|r| r.efficiency(modulo, is_step_efficiency: true)}
     end
 
     # @return [Float] difference in cents between the provided ratio and the scale's best step approximation to it

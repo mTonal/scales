@@ -1,6 +1,6 @@
 # tonal/scales
 
-A collection of scale making tools for microtonal music making and analysis.
+A collection of helpers and tools for creating and analyzing microtonal scales.
 
 ## Installing
 

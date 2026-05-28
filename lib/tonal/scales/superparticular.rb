@@ -1,13 +1,13 @@
 class Tonal::Scale::Superparticular < Tonal::Scale
   def init_sequence
-    Tonal::Sequence::Superparticular.new(start: @args[:start], number: @args[:number], limit: @args[:limit])
+    Tonal::Sequence::Asymptotic.new(start: @args[:start], number: @args[:number], limit: 1/1r)
   end
 
   def name
-    "Superparticular scale, #{@args[:start]}, #{@args[:number]}, #{@args[:limit]}"
+    "Superparticular scale, #{@args[:start]}, #{@args[:number]}}"
   end
 
   def description
-    @description = "Superparticular scale, start: #{@args[:start]}, number: #{@args[:number]}, limit: #{@args[:limit]}"
+    @description = "Superparticular scale, start: #{@args[:start]}, number: #{@args[:number]}"
   end
 end

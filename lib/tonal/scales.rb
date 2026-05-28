@@ -10,6 +10,7 @@ module Tonal
   require "active_support/inflector"
   require "tonal/tools"
   #require "tonal/strings"
+  require "tonal/segment"
   require "tonal/scale"
   require "tonal/sequence"
   require "tonal/analysis"

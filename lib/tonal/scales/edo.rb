@@ -4,7 +4,7 @@ class Tonal::Scale::Edo < Tonal::Scale
   end
 
   def label_ratios!
-    @ratios.each_with_index do |ratio, idx|
+    @scale.each_with_index do |ratio, idx|
       exponent = "#{idx}/#{@args[:modulo]}"
       ratio.label = "2^#{exponent}"
     end
