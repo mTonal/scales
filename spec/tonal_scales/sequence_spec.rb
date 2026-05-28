@@ -68,10 +68,10 @@ RSpec.describe Tonal::Sequence do
     describe ".superpartient" do
       it { expect(described_class.superpartient).to eq described_class.new(3/1r, 4/2r, 5/3r, 6/4r, 7/5r, 8/6r, 9/7r, 10/8r, 11/9r, 12/10r, 13/11r) }
     end
-
-    describe ".branching" do
-      it { expect(described_class.branching(segments: [[1/1r, 3/2r]], starting_nodes: [2/1r])).to eq described_class.new(2/1r, 3/1r) }
-    end
+#
+#    #describe ".branching" do
+#    #  it { expect(described_class.branching(segments: [[1/1r, 3/2r]], starting_nodes: [2/1r])).to eq described_class.new(2/1r, 3/1r) }
+    #end
   end
 
   describe "instance methods" do

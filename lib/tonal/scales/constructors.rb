@@ -134,7 +134,7 @@ class Tonal::Scale
       # @param schizma [Boolean]
       # @param by_threshold [Boolean]
       #
-      def linear(generator=3/2r, upto: 12, limit: 400, equave: 2/1r, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: true)
+      def linear(generator=3/2r, upto: 12, limit: 400, equave: Tonal::Scale::DEFAULT_EQUAVE, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: true)
         Linear.new(generator: generator, upto:, limit:, equave:, threshold:, schizma:, by_threshold:)
       end
 

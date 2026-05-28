@@ -129,7 +129,7 @@ RSpec.describe Tonal::Scale do
   end
 
   describe "#steps" do
-    it { expect(described_class.new(5/4r, 7/4r).steps).to eq [Tonal::Step.new(modulo: 2, step: 1), Tonal::Step.new(modulo: 2, step: 2)] }
+    it { expect(described_class.new(5/4r, 7/4r).steps).to eq [Tonal::Scale::Step.new(modulo: 2, step: 1), Tonal::Scale::Step.new(modulo: 2, step: 2)] }
   end
 
   describe "#first" do

@@ -1,5 +1,5 @@
 class Tonal::Sequence::Linear < Tonal::Sequence
-  def initialize(generator: 3/2r, upto: 12, limit: 400, equave: 2/1r, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: false)
+  def initialize(generator: 3/2r, upto: 12, limit: 400, equave: Tonal::Scale::DEFAULT_EQUAVE, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: false)
     @sequence = unless by_threshold
       initialize_simply(generator:, upto:)
     else
@@ -12,7 +12,6 @@ class Tonal::Sequence::Linear < Tonal::Sequence
     scale = Tonal::Cents::CENT_SCALE
 
     generator = Tonal::Ratio.new(generator) if generator.kind_of?(Numeric)
-    equave = equave.to_r
     threshold = Tonal::Cents.new(cents: threshold) if threshold.kind_of?(Numeric)
 
     ranges = equave.to_cents.plus_minus(threshold).map{|r| r % scale }

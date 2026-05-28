@@ -4,7 +4,7 @@ require "tonal/scales/constructors"
 class Tonal::Scale
   extend Forwardable
 
-  def_delegators :@scale, :entries, :count, :length, :find, :first, :each, :each_with_index, :&, :+, :-, :==, :to_a, :each_cons, :each_slice, :collect, :delete, :intersection
+  def_delegators :@scale, :entries, :count, :length, :find, :first, :each, :each_with_index, :&, :+, :-, :==, :to_a, :each_cons, :each_slice, :collect, :delete, :intersection, :replace
   def_delegators :@analysis, # Analysis::Approximations
                              :step_best_expressing,
                              :ratio_best_expressing,
@@ -49,26 +49,31 @@ class Tonal::Scale
   include Tonal::Scale::IO
   include Tonal::Scale::Constructors
 
+  DEFAULT_EQUAVE = 2/1r
+
   attr_reader :equave
   attr_accessor :name, :description
 
   # @return [Tonal::Scale]
+  #
   # @example
   #   Tonal::Scale.new(1/2r, 1/3r, 1/4r, 1/5r) => [(1/1), (4/3), (8/5)]
   #   Tonal::Scale.new(Tonal::ReducedRatio.new(1,2), Tonal::ReducedRatio.new(1,3), Tonal::ReducedRatio.new(1,4), Tonal::ReducedRatio.new(1,5)) => [(1/1), (4/3), (8/5)]
   #   Tonal::Scale.new(Tonal::Ratio.new(1,2), Tonal::Ratio.new(1,3), Tonal::Ratio.new(1,4), Tonal::Ratio.new(1,5)) => [(1/1), (4/3), (8/5)]
+  #
+  # @example with block
   #   Tonal::Scale.new do |scale|
   #     scale << 1/1r << 4/3r << 8/5r
   #   end => [(1/1), (4/3), (8/5)]
   #
-  # @param collection of ratios
+  # @param collection of ratios, as Rational, Tonal::Ratio, or Tonal::ReducedRatio
   # @param kwargs list of keyword arguments
   #
   def initialize(*collection, **kwargs)
     yield collection if block_given?
 
     @args = kwargs
-    @equave = kwargs[:equave] || 2/1r
+    @equave = kwargs[:equave] || DEFAULT_EQUAVE
     @sequence = init_sequence || Tonal::Sequence.new(collection)
     @scale = SortedSet.new(sequence.map{|term| Tonal::ReducedRatio.new(term.numerator, term.denominator)})
     @scale << Tonal::ReducedRatio.new(1/1r) if @args[:include_equave]
@@ -84,9 +89,12 @@ class Tonal::Scale
   alias :ratios :entries
 
   # @return [Tonal::Scale] branching scale of self
+  #
   # @example
   #   Tonal::Scale.proportional(35/27r, 2/1r).branching => [(1/1), (32/27), (35/27), (73/54), (108/73), (128/73), (140/73)]
-  # TODO: Add parameters
+  #
+  # @param starting_tones [Array] of ratios to start branching from, default is first and last of self
+  #
   def branching(starting_tones: [self.first, self.last.invert])
     Tonal::Scale.branching(segments: [to_a], starting_nodes: starting_tones)
   end
@@ -102,7 +110,9 @@ class Tonal::Scale
     Tonal::Scale.new(*scale.collect{|r| r / self[step]}, name: "#{self.name} - mode #{step}", description: "#{self.description} - mode #{step}")
   end
 
-  # TODO: document
+  # @return [Array] of labels of the ratios of self
+  # @example
+  #  Tonal::Scale.harmonic.labels => ["1/1", "9/8", "5/4", "11/8", "3/2", "13/8", "7/4", "15/8"]
   #
   def labels
     scale.map(&:label)
@@ -119,22 +129,10 @@ class Tonal::Scale
 
   # @return [Tonal::ReducedRatio] the last ratio of self
   # @example
-  #   Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).last => (5/3)
+  #   Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).last => 5/3
   #
   def last
     self[-1]
-  end
-
-  ################
-  #
-  # TODO: Move to a converter class
-  #
-  #
-  # @return [Tonal::Scale] new instance
-  # @see Tonal::Scale#initialize
-  #
-  def [](*ratios)
-    self.new(ratios)
   end
 
   # @return [Array] of antecedents of the notes
@@ -256,10 +254,16 @@ class Tonal::Scale
     intersection(args.flatten).map(&:to_ratio)
   end
 
-  # TODO Document
-  # @return
+  # @return [Tonal::ReducedRatio] or [Array] of Tonal::ReducedRatio at index or indices
+  #
   # @example
-  # params
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)
+  #   scale[0] => 1/1
+  #   scale[1] => 5/4
+  #   scale[0..1] => [1/1, 5/4]
+  #   scale[0, 2] => [1/1, 3/2]
+  #
+  # @param idx [Integer, Range, Array<Integer>] index or indices of the scale to access, supports negative indices and out-of-bounds indices by wrapping around the scale
   #
   def [](*idx)
     results = [].tap do |collection|
@@ -277,23 +281,36 @@ class Tonal::Scale
     results.count > 1 ? results : results.first
   end
 
-  # TODO: Document
+  # @return [Tonal::Scale] self with ratio at index or indices replaced by value
+  #
+  # @example
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)
+  #   scale[0] = 1/1 => [(1/1), (5/4), (3/2), (7/4)]
+  #   scale[1] = 1/1 => [(1/1), (1/1), (3/2), (7/4)]
+  #   scale[0..1] = 1/1 => [(1/1), (1/1), (3/2), (7/4)]
+  #   scale[0, 2] = 1/1 => [(1/1), (1/1), (1/1), (7/4)]
+  #
+  # @param idx [Integer, Range, Array<Integer>] index or indices of the scale to access, supports negative indices and out-of-bounds indices by wrapping around the scale
+  # @param value [Numeric, Tonal::Ratio, Tonal::ReducedRatio] the ratio to replace at the given index or indices
   #
   def []=(idx, value)
     ents = entries
-    ents[idx % count] = value.to_ratio
-    @scale.replace(ents)
+    ents[idx % count] = value.to_reduced_ratio
+    replace(ents)
   end
-  alias :replace :[]=
 
-  # TODO Document
-  # @return
+  # @return [Tonal::Scale] self with additional ratios added to the end of the scale
+  #
   # @example
-  # params
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r)
+  #   scale << 7/4r => [(1/1), (5/4), (3/2), (7/4)]
+  #   scale << [7/4r, 15/8r] => [(1/1), (5/4), (3/2), (7/4), (15/8)]
+  #
+  #  # @param list [Numeric, Tonal::Ratio, Tonal::ReducedRatio, Array] of ratios to add to the end of the scale
   #
   def <<(*list)
     list.each do |term|
-      scale << term.to_ratio
+      scale << term.to_reduced_ratio
     end
     self
   end
@@ -304,7 +321,7 @@ class Tonal::Scale
   def delete_at(idx)
     ents = entries
     ents.delete_at(idx)
-    @scale.replace(ents)
+    replace(ents)
     self
   end
 

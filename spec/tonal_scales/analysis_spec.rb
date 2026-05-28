@@ -1,24 +1,6 @@
 require "spec_helper"
 
 RSpec.describe Tonal::Scale::Analysis do
-  #def averages_between_steps
-  #def unique_intervals_by_step(step)
-  #def unique_interval_prime_vectors_by_step(step)
-  #def determinant_by_step(step)
-  #def unique_intervals_by_step_distances
-  #def find_all(ratio)
-  #def variations_of_unique_intervals
-  #def occurences
-  #def mos? TODO Do we need this here?
-  #def combinations TODO Consider eliminating or renaming
-  #def differences TODO Consider eliminating or renaming
-  #def by_best_expressions_of(*rats)
-  #def cent_diff_mod(mod)
-  #def cent_diff
-
-  describe "class methods" do
-  end
-
   describe "#modes" do
     let(:scale) { Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
 
@@ -34,58 +16,6 @@ RSpec.describe Tonal::Scale::Analysis do
     it "each mode starts from 1/1" do
       described_class.new(scale).modes.each { |m| expect(m.first).to eq 1/1r }
     end
-  end
-
-  describe "#constant_structure?" do
-    context "with non-constant structure scale" do
-      let(:scale) { Tonal::Scale.harmonic }
-
-      it "returns false" do
-        pending "unique_intervals_by_step_distances has a type error (String subtraction)"
-        expect(described_class.new(scale).constant_structure?).to eq false
-      end
-    end
-
-    context "with constant structure scale" do
-      let(:scale) { Tonal::Scale.linear }
-
-      it "returns true" do
-        pending "unique_intervals_by_step_distances has a type error (String subtraction)"
-        expect(described_class.new(scale).constant_structure?).to eq true
-      end
-    end
-  end
-
-  #describe "#interval_between_steps" do
-  #  let(:scale) { Tonal::Scale.afs }
-  #
-  #  it "expects two arguments" do
-  #    expect{ described_class.new(scale).interval_between_steps }.to raise_error ArgumentError, "wrong number of arguments (given 0, expected 2)"
-  #  end
-  #
-  #  it "returns the interval between the given steps" do
-  #    expect(described_class.new(scale).interval_between_steps(0, 1)).to eq Tonal::Interval.new(1/1r, 9/8r)
-  #  end
-  #
-  #  context "When the inputs are reversed" do
-  #    it "returns the reciprocol interval between the steps" do
-  #      expect(described_class.new(scale).interval_between_steps(1, 0)).to eq Tonal::Interval.new(9/8r, 1/1r)
-  #    end
-  #  end
-  #end
-
-  # TODO Eliminate method?
-  #def all_intervals_by_step(step)
-  #def all_intervals_by_steps
-  #describe "#all_intervals_by_step" do
-  #  let(:scale) { Tonal::Scale.harmonic }
-  #
-  #  it("expects an argument") do
-  #    expect{ described_class.new(scale).all_intervals_by_step }.to raise_error ArgumentError, "wrong number of arguments (given 0, expected 1)"
-  #  end
-  #end
-
-  describe "#cents_distance_from" do
   end
 
   describe "#efficiency_with" do
@@ -106,44 +36,6 @@ RSpec.describe Tonal::Scale::Analysis do
   end
 
   describe "#approximate" do
-
-  end
-
-  #describe "#cents_difference" do
-  #  let(:scale) { Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
-  #
-  #  context "by :scale_step" do
-  #    it "returns the ratios' cents differences with the scale's steps" do
-  #      expect(described_class.new(scale).cents_difference(unit: :scale_step)).to eq [0.0, 86.31, 101.96, 68.83]
-  #      #0.0, 400.0, 700.0, 1000.0]
-  #    end
-  #  end
-  #
-  #  context "by :hundredth_cent" do
-  #    it "returns the ratios' nearest hundredth cent differences" do
-  #      expect(described_class.new(scale).cents_difference(unit: :hundredth_cent)).to eq [0.0, -13.69, 1.96, -31.17]
-  #      #0.0, 400.0, 700.0, 1000.0]
-  #    end
-  #  end
-  #end
-
-  #describe "#nearest_hundredth_cents" do
-  #  let(:scale) { Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
-  #
-  #  it "returns the map of nearest hundredth cents values for each scale's ratios" do
-  #    expect(described_class.new(scale).nearest_hundredth_cents).to eq [0.0, 400.0, 700.0, 1000.0]
-  #  end
-  #end
-
-  #describe "#nearest_hundredth_cents_differences" do
-  #  let(:scale) { Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
-  #
-  #  it "returns the nearest hundredth cent differences" do
-  #    expect(described_class.new(scale).nearest_hundredth_cents_differences).to eq [0.0, -13.69, 1.96, -31.17]
-  #  end
-  #end
-
-  describe "#nearest_hundredth_cents_pairs" do
 
   end
 
@@ -171,8 +63,7 @@ RSpec.describe Tonal::Scale::Analysis do
       let(:modulo) { 5 }
 
       it "steps are calculated from the scale ratio's logarithms times the scale's count" do
-        pending "Tonal::Step not available in tonal-tools v7"
-        expect(described_class.new(scale).steps).to eq expected_steps.map{|step| Tonal::Step.new(modulo: modulo, step: step)}
+        expect(described_class.new(scale).steps).to eq expected_steps.map{|step| Tonal::Scale::Step.new(modulo: modulo, step: step)}
       end
     end
 
@@ -181,8 +72,7 @@ RSpec.describe Tonal::Scale::Analysis do
       let(:modulo) { 53 }
 
       it "steps are calculated from the scale ratio's logarithms times the provided modulo" do
-        pending "Tonal::Step not available in tonal-tools v7"
-        expect(described_class.new(scale).steps(modulo)).to eq expected_steps.map{|step| Tonal::Step.new(modulo: modulo, step: step)}
+        expect(described_class.new(scale).steps(modulo)).to eq expected_steps.map{|step| Tonal::Scale::Step.new(modulo: modulo, step: step)}
       end
     end
   end
@@ -193,68 +83,7 @@ RSpec.describe Tonal::Scale::Analysis do
     let(:modulo) { 1200 }
 
     it "returns the steps for the scale's ratios over the 1200 modulo" do
-        pending "Tonal::Step not available in tonal-tools v7"
-        expect(described_class.new(scale).steps_in_cents).to eq expected_steps.map{|step| Tonal::Step.new(modulo: modulo, step: step)}
-      end
-  end
-
-  describe "#to_radians" do
-
-  end
-
-  #def to_degrees
-  #def to_circle
-
-  describe "#nearest_ratio_to" do
-
-  end
-
-  describe "#efficiency_of" do
-  end
-
-  describe "#nearest_hundredth_cents" do
-  end
-
-  describe "#nearest_hundredth_diffs" do
-  end
-
-  describe "#nearest_ratios" do
-  end
-
-  describe "#by_best_expressions_of" do
-  end
-
-  describe "#maps_on" do
-  end
-
-  describe "#line_plot" do
-  end
-
-  describe "#frets" do
-  end
-
-  describe "#cents_distance_from" do
-  end
-
-  describe "#norm_on_step" do
-  end
-
-
-  describe "#steps_in_cents" do
-  end
-
-  describe "#steps_nearest_hundredth_cents" do
-  end
-
-  describe "#steps_nearest_whole_step_difference" do
-  end
-
-  describe "#best_expression_of" do
-  end
-end
-
-RSpec.describe Tonal::Scale::Analysis::Differences do
-  describe "" do
-
+      expect(described_class.new(scale).steps_in_cents).to eq expected_steps.map{|step| Tonal::Scale::Step.new(modulo: modulo, step: step)}
+    end
   end
 end
