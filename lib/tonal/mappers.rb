@@ -50,6 +50,19 @@ class Tonal::Scale::Mappers
     ratios.map(&:to_r)
   end
 
+  # @return [Array] of Integers representing MIDI numbers of self
+  # @example
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_midi
+  #   => [60, 61, 62, 63, 64, 65, 66]
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_midi(values_only: false)
+  #   => [60 MIDI, 61 MIDI, 62 MIDI, 63 MIDI, 64 MIDI, 65 MIDI, 66 MIDI]
+  #
+  def to_midi(modulo=count, midi_root: Tonal::Midi::Note::C4_MIDI_NUMBER, values_only: true)
+    @scale.steps(modulo).map{|step| step.step_to_midi(midi_root: midi_root)}.map do |midi_number|
+      values_only ? midi_number.value : midi_number
+    end
+  end
+
   # @return [Array] of Floats representing radians of self
   # @example
   #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_radians

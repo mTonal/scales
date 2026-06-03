@@ -8,6 +8,10 @@ module Tonal
       mtonal_directory.join("My SCL files")
     end
 
+    def self.kbm_directory
+      mtonal_directory.join("My KBM files")
+    end
+
     def self.work_directory
       mtonal_directory.join("tmp")
     end

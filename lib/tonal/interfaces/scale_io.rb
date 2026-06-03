@@ -65,44 +65,6 @@ module Tonal
   end
 end
 
-class Tonal::IO::Yaml < Tonal::IO::Scale
-  def self.file_extension
-    ".yml"
-  end
-
-  # @return [Tonal::Scale] scale parsed from YAML file
-  # @param file_location file and location of YAML file
-  #
-  def self.read(file_location)
-    parse(YAML.load(File.read(file_location)))
-  end
-
-  # @return [Integer] count of bytes written to YAML file
-  #
-  def write
-    super(hashed_output.to_yaml(line_width: 200))
-  end
-end
-
-class Tonal::IO::Json < Tonal::IO::Scale
-  def self.file_extension
-    ".json"
-  end
-
-  # @return [Tonal::Scale] scale parsed from JSON file
-  # @param file_location file and location of JSON file
-  #
-  def self.read(file_location)
-    parse(JSON.parse(File.read(file_location)))
-  end
-
-  # @return [Integer] count of bytes written to JSON file
-  #
-  def write
-    super(JSON.pretty_generate(hashed_output))
-  end
-end
-
 class Tonal::IO::Scl < Tonal::IO::Scale
   class << self
     private
@@ -169,12 +131,12 @@ class Tonal::IO::Scl < Tonal::IO::Scale
     # TODO Introduce seaching "My SCLs" with autocompletion of path to the file. Example from https://stackoverflow.com/questions/23888755/user-entry-path-autocompletion
     #
     # require 'readline'
-    # 
+    #
     # Readline.completion_append_character = ""
     # Readline.completion_proc = Proc.new do |str|
     #   Dir[str + '*'].grep( /^#{Regexp.escape(str)}/ )
     # end
-    # 
+    #
     # file = File.open(Readline.readline('File Name> ').strip!)
 
     unless file_location
@@ -219,7 +181,66 @@ class Tonal::IO::Scl < Tonal::IO::Scale
     <%= pitch %>
     <% end -%>
     <%= "2/1" if has_identity_ratio? -%>
-    
+
+    EOT
+
+    body = ERB.new(template, trim_mode: "-")
+    super(body.result(binding))
+  end
+end
+
+class Tonal::IO::Kbm < Tonal::IO::Scale
+  DEFAULT_MIDI_START = 0
+  DEFAULT_MIDI_END = 127
+  DEFAULT_MIDI_MIDDLE = 60
+  DEFAULT_MIDI_REFERENCE = 69
+  DEFAULT_REFERENCE_FREQUENCY = 440.0
+
+  def self.file_extension
+    ".kbm"
+  end
+
+  def self.root_directory
+    Tonal::IO.kbm_directory
+  end
+
+  def self.faves_directory
+    Pathname.new("faves")
+  end
+
+  # @return [Tonal::Scale] scale parsed from KBM file
+  # @param [file_location] file and location of KBM file
+  #
+  def self.read_from_file(file_location, name: "")
+    file_path = Pathname.new(file_location)
+    read(File.open(file_path), name: file_path.basename(".kbm").to_s)
+  end
+
+  def write
+    output = hashed_output
+    # * Line 1: Size of the map (the number of keys in the repeating pattern, e.g., 12 for standard piano mapping).
+    # * Line 2: The first MIDI note number to be retuned (usually (0)).
+    # * Line 3: The last MIDI note number to be retuned (usually (127)).
+    # * Line 4: Middle note (the MIDI note where the first entry of the mapping is placed, usually (60) for middle C or (69) for A4).
+    # * Line 5: Reference note (the MIDI note for which the reference frequency is given, usually (69)).
+    # * Line 6: Frequency (Hz) to tune the reference note to (usually (440.0)).
+    # * Line 7: Scale degree to consider as the formal octave. This determines the pitch jump between adjacent mapping patterns (e.g., (7) for 7-tone, (12) for 12-tone).
+    # * Line 8+: The Mapping Array. Each following line represents one key in the repeating octave pattern.
+    # *  If a line is an integer, it maps the MIDI note to that specific degree of the .scl scale (e.g., (1) is the first scale tone, (2) is the second tone, etc.).
+    # *  If it is (x) or (-1), the key is unmapped (silent). [1, 2, 3, 4]
+    template = <<~EOT
+    ! <%= output["name"] %>
+    <%= output["pitches"].count %>
+    <%= output["midi_start"] || DEFAULT_MIDI_START %>
+    <%= output["midi_end"] || DEFAULT_MIDI_END %>
+    <%= output["midi_middle"] || DEFAULT_MIDI_MIDDLE %>
+    <%= output["midi_reference"] || DEFAULT_MIDI_REFERENCE %>
+    <%= output["reference_frequency"] || DEFAULT_REFERENCE_FREQUENCY %>
+    <%= output["pitches"].count %>
+    <% output["pitches"].each_index do |index| -%>
+    <%= index %>
+    <% end -%>
+
     EOT
 
     body = ERB.new(template, trim_mode: "-")

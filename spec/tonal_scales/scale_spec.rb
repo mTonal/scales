@@ -3,33 +3,35 @@ require "spec_helper"
 RSpec.describe Tonal::Scale do
   let(:ratios) { [1/1r, 3/2r, 7/4r] }
 
-  describe "ratio inputs" do
-    context "with Rationals" do
-      let(:ratios) { [1/1r, 3/2r, 7/4r] }
-      it { expect(described_class.new(ratios).to_a).to eq ratios }
-    end
+  describe "Initialization" do
+    describe "ratio inputs" do
+      context "with Rationals" do
+        let(:ratios) { [1/1r, 3/2r, 7/4r] }
+        it { expect(described_class.new(ratios).to_a).to eq ratios }
+      end
 
-    context "with Tonal::*Ratios" do
-      let(:ratios) { [Tonal::ReducedRatio.new(1/1r), Tonal::Ratio.new(3/2r), Tonal::Ratio.new(7,4)] }
-      it { expect(described_class.new(ratios).to_a).to eq ratios }
-    end
+      context "with Tonal::*Ratios" do
+        let(:ratios) { [Tonal::ReducedRatio.new(1/1r), Tonal::Ratio.new(3/2r), Tonal::Ratio.new(7,4)] }
+        it { expect(described_class.new(ratios).to_a).to eq ratios }
+      end
 
-    context "with Rationals and Tonal::*Ratios" do
-      let(:ratios) { [Tonal::ReducedRatio.new(1/1r), 3/2r, Tonal::Ratio.new(7,4)] }
-      it { expect(described_class.new(ratios).to_a).to eq ratios }
-    end
+      context "with Rationals and Tonal::*Ratios" do
+        let(:ratios) { [Tonal::ReducedRatio.new(1/1r), 3/2r, Tonal::Ratio.new(7,4)] }
+        it { expect(described_class.new(ratios).to_a).to eq ratios }
+      end
 
-    context "with a block" do
-      it { expect(described_class.new{|scale| scale << 1/1r << 3/2r << 7/4r}.to_a).to eq [1/1r, 3/2r, 7/4r] }
-    end
+      context "with a block" do
+        it { expect(described_class.new{|scale| scale << 1/1r << 3/2r << 7/4r}.to_a).to eq [1/1r, 3/2r, 7/4r] }
+      end
 
-    context "with unordered inputs" do
-      let(:ordered_ratios) { [1/1r, 3/2r, 7/4r] }
-      let(:unordered_ratios) { [1/1r, 7/4r, 3/2r] }
-      let(:scale) { described_class.new(unordered_ratios) }
+      context "with unordered inputs" do
+        let(:ordered_ratios) { [1/1r, 3/2r, 7/4r] }
+        let(:unordered_ratios) { [1/1r, 7/4r, 3/2r] }
+        let(:scale) { described_class.new(unordered_ratios) }
 
-      it "an ordered scale is returned" do
-        expect(scale).to eq described_class.new(ordered_ratios)
+        it "an ordered scale is returned" do
+          expect(scale).to eq described_class.new(ordered_ratios)
+        end
       end
     end
   end
@@ -396,24 +398,21 @@ RSpec.describe Tonal::Scale do
   end
 end
 
-# Scale constructor classes
-# DONE - SPEC RUNS, EXECUTED IN ERB
-# .edo(modulo)
-# .linear(ratio=3/2r, upto: 12)
-# .proportional
-# .intra_proportional
+RSpec.describe Tonal::Scale::Cps do
+  describe ".default_take" do
+    it "returns half the count of the set when the count is even" do
+      expect(described_class.default_take(6)).to eq 3
+    end
 
-# TO DO
-# .afs(k: 12, p: 1, num: 1, start: 1)
+    it "returns half the count of the set minus one when the count is odd" do
+      expect(described_class.default_take(7)).to eq 3
+    end
+  end
+end
+
+# TO CONSIDER
+# .exploded_superparticular(basis: 5/4r)
 # .meru(upto = 15, seeds: [0, 1], indices: [-1, -2], coeff: [1, 1])
-# .cps(*set, take: 2)
-# .harmonic(range=(8..16), fund: 1)
-# .subharmonic(range=(8..16), fund: 1)
-
-# .superparticulars(start=1, number=12, limit: RaducedRatio.new(ROS::IDENTITY_RATIO))
-# .superpartients(start=1, number=12, part: 2, limit: RaducedRatio.new(ROS::IDENTITY_RATIO), exclusively: true)
-
-# TO RECONSIDER
 # .series(range:, base:, sub: false)
 # .mirror(range=(8..16), fund: 1)
 # .pcs
@@ -424,7 +423,6 @@ end
 # .lambdoma
 # .tempered
 # .top(basis: [2/1r, 3/2r, 5/4r], superpart: 81/80r)
-
 
 # def initialize(*ratios, name: "Unamed", description: "Undescribed")
 # def self.identity_ratio

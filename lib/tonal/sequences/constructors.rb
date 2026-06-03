@@ -43,7 +43,7 @@ class Tonal::Sequence
 
       # TODO Document
       #
-      def cps(set: [], take: 2)
+      def cps(set: [], take: Tonal::Scale::Cps.default_take(set.count))
         Cps.new(set:, take:)
       end
 

@@ -39,7 +39,7 @@ class Tonal::Scale
                              :difference, :differences,
                              :nearest_hundredth_cents_differences, :cents_difference_pairs
 
-  def_delegators :@mappers, :to_cents, :to_log2, :to_f, :to_r, :maps_on,
+  def_delegators :@mappers, :to_cents, :to_log2, :to_f, :to_r, :to_midi, :maps_on,
                             :to_radians, :to_degrees, :to_circle, :negatives,
                             :nearest_small_ratios, :adjusted_standard_tuning_frequency #, :best_fitting_edo
 

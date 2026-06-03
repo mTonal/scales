@@ -27,6 +27,16 @@ RSpec.describe Tonal::Scale::Mappers do
     end
   end
 
+  describe "#to_midi" do
+    it "returns the MIDI numbers of the notes of the scale" do
+      expect(described_class.new(scale).to_midi).to eq [60, 61, 62, 63, 64, 65, 66]
+    end
+
+    it "returns the MIDI note objects of the notes of the scale" do
+      expect(described_class.new(scale).to_midi(values_only: false)).to eq [Tonal::Midi::Note.new(number: 60), Tonal::Midi::Note.new(number: 61), Tonal::Midi::Note.new(number: 62), Tonal::Midi::Note.new(number: 63), Tonal::Midi::Note.new(number: 64), Tonal::Midi::Note.new(number: 65), Tonal::Midi::Note.new(number: 66)]
+    end
+  end
+
   describe "#to_radians" do
     it "returns the radians of the scale" do
       expect(described_class.new(scale).to_radians).to eq [0.0, 0.9, 1.8, 2.69, 3.59, 4.49, 5.39]

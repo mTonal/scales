@@ -17,10 +17,14 @@ class Tonal::Scale::Cps < Tonal::Scale
   end
 
   def assigned_take
-    @take ||= (@args[:take] || (assigned_set.count/2))
+    @take ||= (@args[:take] || self.class.default_take(assigned_set.count))
   end
 
   def prettified_set
     assigned_set.map{|input| input.kind_of?(Float) ? input.round(2) : input}
+  end
+
+  def self.default_take(count)
+    count.even? ? count / 2 : (count - 1) / 2
   end
 end
