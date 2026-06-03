@@ -19,7 +19,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = Gem::Requirement.new(">= 3.1")
   spec.required_rubygems_version = Gem::Requirement.new(">= 3.1")
   spec.rubygems_version = "3.5.23"
-  spec.add_runtime_dependency "tonal-tools", [">= 7"]
+  spec.add_runtime_dependency "tonal-tools", ["~> 8"]
   spec.add_runtime_dependency "rubyzip", ["~> 3"]
   spec.add_runtime_dependency "caxlsx", ["~> 4"]
   spec.add_runtime_dependency "erb", ["~> 6"]
