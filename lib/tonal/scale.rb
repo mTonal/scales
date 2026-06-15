@@ -266,7 +266,15 @@ class Tonal::Scale
     to_a.to_s
   end
 
-  # TODO Document
+  # @return [Tonal::ReducedRatio, Array<Tonal::ReducedRatio>] ratio(s) from self retrieved by index or value
+  #
+  # @example
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)
+  #   scale.get(1) => 5/4
+  #   scale.get(5/4r, by: :value) => [5/4]
+  #
+  # @param args [Integer, Range, Rational] index(es) or value(s) to retrieve
+  # @param by [Symbol] retrieval strategy, :index (default) or :value
   #
   def get(*args, by: :index)
     case by
@@ -277,11 +285,24 @@ class Tonal::Scale
     end
   end
 
-  # TODO Document
+  # @return [Tonal::ReducedRatio, Array<Tonal::ReducedRatio>] ratio(s) at the given index or indices
+  #
+  # @example
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)
+  #   scale.get_by_index(1) => 5/4
+  #   scale.get_by_index(0, 2) => [1/1, 3/2]
+  #
+  # @param args [Integer, Range] index or indices of the ratios to retrieve
   #
   def get_by_index(*args) = get(*args, by: :index)
 
-  # TODO Document
+  # @return [Array<Tonal::Ratio>] ratios from self matching the given values
+  #
+  # @example
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)
+  #   scale.get_by_value(5/4r, 3/2r) => [5/4, 3/2]
+  #
+  # @param args [Rational, Tonal::Ratio] value(s) to search for in the scale
   #
   def get_by_value(*args)
     intersection(args.flatten).map(&:to_ratio)
@@ -349,7 +370,13 @@ class Tonal::Scale
   end
   alias :add :<<
 
-  # TODO Document
+  # @return [Tonal::Scale] self with the ratio at the given index removed
+  #
+  # @example
+  #   scale = Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)
+  #   scale.delete_at(1) => [(1/1), (3/2), (7/4)]
+  #
+  # @param idx [Integer] index of the ratio to remove
   #
   def delete_at(idx)
     ents = entries
@@ -358,10 +385,13 @@ class Tonal::Scale
     self
   end
 
-  # TODO Document
-  # @return
+  # @return [Tonal::Scale] new scale with each ratio of self multiplied by rhs; when rhs is a Scale, returns the cross-product
+  #
   # @example
-  # params
+  #   Tonal::Scale.new(1/1r, 5/4r, 3/2r) * (3/2r) => [(3/2), (15/8), (9/8)]
+  #   Tonal::Scale.new(1/1r, 5/4r) * Tonal::Scale.new(1/1r, 3/2r) => cross-product scale
+  #
+  # @param rhs [Tonal::Scale, Rational, Numeric] the scale or scalar to multiply against self
   #
   def *(rhs)
     if rhs.is_a?(Tonal::Scale)
@@ -371,10 +401,12 @@ class Tonal::Scale
     end
   end
 
-  # TODO Document
-  # @return
+  # @return [Tonal::Scale] new scale with each ratio of self divided by rhs
+  #
   # @example
-  # params
+  #   Tonal::Scale.new(1/1r, 5/4r, 3/2r) / (5/4r) => [(4/5), (1/1), (6/5)]
+  #
+  # @param rhs [Rational, Numeric] the scalar to divide each ratio by
   #
   def /(rhs)
     self.class.new(*scale.collect{|r| r.to_r / (rhs)})
@@ -384,11 +416,12 @@ class Tonal::Scale
     self.class.new(*scale.collect{|r| r.to_r ** power})
   end
 
-  # TODO Document
-  # @return [Tonal::Scale] result of another scale added to self
-  # @example
-  # @param [Tonal::Scale] the scale being added to self
+  # @return [Tonal::Scale] new scale combining the ratios of self and rhs
   #
+  # @example
+  #   Tonal::Scale.new(1/1r, 5/4r, 3/2r) + Tonal::Scale.new(7/4r) => [(1/1), (5/4), (3/2), (7/4)]
+  #
+  # @param rhs [Tonal::Scale] the scale whose ratios are joined with self
   #
   def +(rhs)
     self.class.new(*(entries+rhs.entries), name: "#{name} + #{rhs.name}", description: "#{description} + #{rhs.description}")

@@ -244,7 +244,13 @@ class Tonal::Scale::Analysis
       ratios.map(&:max_prime)
     end
 
-    # TODO Document
+    # @return [Array<Numeric>] complexity heights of each ratio in the scale measured by the given method
+    #
+    # @example
+    #   Tonal::Scale::Analysis.new(Tonal::Scale.harmonic).heights
+    #   => [1, 72, 20, 88, 6, 104, 28, 120]
+    #
+    # @param method [Symbol] complexity measure to apply; one of :benedetti, :wilson, :tenney, :log_weil, :weil
     #
     def heights(method: :benedetti)
       return "Unknown measure #{method}. Use #{ACCEPTED_MEASURES}" unless ACCEPTED_MEASURES.include?(method)
@@ -263,8 +269,10 @@ class Tonal::Scale::Analysis
     end
 
     # @return [Array] of prime vectors of the notes of the scale
+    #
     # @example
-    # TODO Document
+    #   Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r).prime_vectors
+    #   => [[0, 0], [-2, 0, 1], [-1, 1], [-2, 0, 0, 1]]
     #
     def prime_vectors
       ratios.map(&:prime_vector)
@@ -368,7 +376,13 @@ class Tonal::Scale::Analysis
       @scale = scale
     end
 
-    # TODO Document
+    # @return [Array<Float>] the EDO step efficiency of each ratio in the scale
+    #
+    # @example
+    #   Tonal::Scale::Analysis::Efficiencies.new(Tonal::Scale.harmonic).efficiencies
+    #   => [0.0, -3.91, 13.69, -48.68, 1.96, -40.53, -31.17, -11.73]
+    #
+    # @param modulo [Integer] the EDO modulo used to compute step efficiency, defaults to scale count
     #
     def efficiencies(modulo=count)
       scale.ratios.map{|r| r.efficiency(modulo, is_step_efficiency: true)}
@@ -394,8 +408,13 @@ class Tonal::Scale::Analysis
       @inventory = nil
     end
 
+    # @return [Hash] mapping each interval ratio to all Tonal::Interval instances of that ratio found in the scale
+    #
+    # @example
+    #   Tonal::Scale::Analysis::Intervals.new(Tonal::Scale.harmonic).occurrences
+    #   => {(1/1) => [...], (9/8) => [...], ...}
+    #
     # TODO See how output could be better designed
-    # TODO Document
     #
     def occurrences
       Hash.new{|h,k| h[k] = []}.tap do |hsh|
@@ -490,10 +509,14 @@ class Tonal::Scale::Analysis
       all_intervals_by_step(step).uniq{|i| i.to_r}.sort{|i| i.to_r}
     end
 
-    # @return
+    # @return [Array<Array<Integer>>] prime vectors of the unique intervals at the given step distance, zero-padded to equal length
+    #
     # @example
-    # @param
-    # TODO Document
+    #   Tonal::Scale::Analysis::Intervals.new(Tonal::Scale.harmonic).unique_interval_prime_vectors_by_step(1)
+    #   => [[-4, 0, 1], [-3, 1], ...]
+    #
+    # @param step [Integer] the step distance between note pairs
+    #
     def unique_interval_prime_vectors_by_step(step)
       pvs = unique_intervals_by_step(step).map(&:interval).map(&:prime_vector).map(&:to_a)
       max_count = pvs.map(&:length).max
@@ -531,7 +554,11 @@ class Tonal::Scale::Analysis
       end
     end
 
-    # TODO Document
+    # @return [Array] of [interval_ratio, span_string] pairs summarizing each interval combination in the scale
+    #
+    # @example
+    #   Tonal::Scale::Analysis::Intervals.new(Tonal::Scale.harmonic).combinations_description
+    #   => [[9/8, "9/8 (9/8 / 1/1)"], ...]
     #
     def combinations_description
       combinations.map{|k,v| [k, v.map(&:span).join(', ')]}
@@ -549,7 +576,7 @@ class Tonal::Scale::Analysis
     #
 
 
-    # TODO Document
+    # Renders a 2D table of intervals between all scale note pairs (not yet active)
     #
     #def table
     #  rows = []
@@ -560,7 +587,7 @@ class Tonal::Scale::Analysis
     #  Terminal::Table.new(rows: rows)
     #end
 
-    # TODO Document
+    # Renders a sorted inventory of all interval ratios in the scale with prime vectors and cent differences (not yet active)
     #
     # Generalize - presently hard-coded for 7-limit
     #
@@ -643,20 +670,38 @@ class Tonal::Scale::Analysis
       @scale = scale
     end
 
-    # TODO Document
+    # @return [Float] mean of the step efficiencies of the scale
+    #
+    # @example
+    #   Tonal::Scale::Analysis::Statistics.new(Tonal::Scale.harmonic).mean => -16.56
+    #
+    # @param modulo [Integer] the EDO modulo used to compute step efficiencies, defaults to scale count
+    # @param round [Integer] decimal places to round the result
     #
     def mean(modulo=count, round: PRECISION)
       (efficiencies(modulo).sum/count).round(round)
     end
 
-    # TODO Document
+    # @return [Float] variance of the step efficiencies of the scale
+    #
+    # @example
+    #   Tonal::Scale::Analysis::Statistics.new(Tonal::Scale.harmonic).variance => 368.18
+    #
+    # @param modulo [Integer] the EDO modulo used to compute step efficiencies, defaults to scale count
+    # @param round [Integer] decimal places to round the result
     #
     def variance(modulo=count, round: PRECISION)
       m = mean(modulo, round:)
       (efficiencies(modulo).map{|x| (x - m)**2}.sum/count).round(round)
     end
 
-    # TODO Document
+    # @return [Float] standard deviation of the step efficiencies of the scale
+    #
+    # @example
+    #   Tonal::Scale::Analysis::Statistics.new(Tonal::Scale.harmonic).standard_deviation => 19.19
+    #
+    # @param modulo [Integer] the EDO modulo used to compute step efficiencies, defaults to scale count
+    # @param round [Integer] decimal places to round the result
     #
     def standard_deviation(modulo=count, round: PRECISION)
       (Math.sqrt(variance(modulo, round:))).round(round)

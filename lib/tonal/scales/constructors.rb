@@ -204,7 +204,12 @@ class Tonal::Scale
         Superparticular.new(start:, number:)
       end
 
-      # TODO Document
+      # @return [Tonal::Scale] a scale derived by expanding a superparticular ratio via its prime divisions
+      #
+      # @example
+      #   Tonal::Scale.exploded_superparticular(basis: 5/4r)
+      #
+      # @param basis [Rational] the superparticular ratio to explode into prime-divisional components
       #
       def exploded_superparticular(basis: 5/4r)
         pds = basis.prime_divisions
@@ -213,10 +218,17 @@ class Tonal::Scale
 
       end
 
-      # TODO Document
+      # @return [Tonal::Scale::Superpartient] a scale of superpartient ratios of the form n/(n-part)
+      #
       # @example
       #   Tonal::Scale.superpartient
       #   => [1/1, 13/11, 6/5, 11/9, 5/4, 9/7, 4/3, 7/5, 3/2, 5/3]
+      #
+      # @param start [Integer] starting index of the series
+      # @param number [Integer] number of ratios to generate
+      # @param part [Integer] the difference between numerator and denominator (n vs n-part)
+      # @param limit [Tonal::Ratio] upper bound ratio; ratios above this are excluded
+      # @param exclusively [Boolean] whether to exclude ratios not strictly of the superpartient form
       #
       def superpartient(start: 1, number: 12, part: 2, limit: Tonal::Ratio.new(1/1r), exclusively: true)
         Superpartient.new(start:, number:, part:, limit:, exclusively:)

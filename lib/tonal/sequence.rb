@@ -17,20 +17,31 @@ class Tonal::Sequence
   # Instance methods
   # ######################################
 
-  # TODO Document
+  # @return [Tonal::Scale] a scale built from the ratios of self
+  #
+  # @example
+  #   Tonal::Sequence.harmonic.to_scale => [(1/1), (9/8), (5/4), (11/8), (3/2), (13/8), (7/4), (15/8)]
   #
   def to_scale
     Tonal::Scale.new(sequence)
   end
 
-  # TODO Document
+  # @return [String] string representation of the sequence's ratios
+  #
+  # @example
+  #   Tonal::Sequence.harmonic.inspect => "[(1/1), (9/8), (5/4), (11/8), (3/2), (13/8), (7/4), (15/8)]"
+  #
   # This method could be inheritable, if Tonal::Scale < Tonal::Sequence
   #
   def inspect
     sequence.to_a.to_s
   end
 
-  # TODO Document
+  # @return [Array<Rational>] the ratios of self as Ruby Rationals
+  #
+  # @example
+  #   Tonal::Sequence.harmonic.to_r => [(1/1), (9/8), (5/4), (11/8), (3/2), (13/8), (7/4), (15/8)]
+  #
   # This method could be inheritable, if ::Scale < Tonal::Sequence
   #
   def to_r

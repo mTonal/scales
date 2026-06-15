@@ -94,15 +94,14 @@ class Tonal::Scale::Mappers
   end
   alias :circle :to_circle
 
-  # TODO Document
+  # @return [Float] the frequency in self nearest to standard tuning, adjusted from the reference (root) frequency
   #
-  # * Standard tuning frequency
-  # * Root note frequency
-  # * Scale note closest to standard tuning frequency
+  # @example
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.harmonic).adjusted_standard_tuning_frequency
+  #   # standard_tuning_frequency: 440.0 Hz, reference_frequency: 261.63 Hz (middle C)
   #
-  # Example 1
-  #   standard tuning frequence: 440.0
-  #   root note frequency: 261.63
+  # @param standard_tuning_frequency [Float] the target tuning reference, default 440.0 Hz (concert A)
+  # @param reference_frequency [Float] the root note frequency of the scale, default 261.63 Hz (middle C)
   #
   def adjusted_standard_tuning_frequency(standard_tuning_frequency: 440.0, reference_frequency: 261.63)
     while(reference_frequency < standard_tuning_frequency) do
@@ -111,14 +110,23 @@ class Tonal::Scale::Mappers
     reference_frequency * ratio_best_expressing((standard_tuning_frequency/reference_frequency).to_reduced_ratio.to_f).to_f / 2.0
   end
 
-  # TODO Document
+  # @return [Array<Tonal::Step>] the step positions of the Levy-negative of each ratio in the scale
   #
+  # @example
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.harmonic).negatives
+  #   => [0\8, 7\8, 6\8, 5\8, 4\8, 3\8, 2\8, 1\8]
   #
   def negatives
     ratios.map(&:negative).map{|r| r.step(modulo)}
   end
 
-  # TODO Document
+  # @return [Array<Tonal::ReducedRatio>] the lowest-complexity approximation of each ratio in self
+  #
+  # @example
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(12)).nearest_small_ratios
+  #   => [1/1, 16/15, 9/8, 6/5, 5/4, 4/3, 7/5, 3/2, 8/5, 5/3, 7/4, 15/8]
+  #
+  # @param sort_by [Symbol] complexity measure used to rank approximations; one of :benedetti, :wilson, :tenney, :log_weil, :weil
   #
   def nearest_small_ratios(sort_by: :benedetti)
     sort_by = :benedetti unless Tonal::Scale::Analysis::ACCEPTED_MEASURES.include?(sort_by)
@@ -126,11 +134,13 @@ class Tonal::Scale::Mappers
     ratios.map{|r| r.approximate.by_continued_fraction.sort_by(&sort_by).ratios.first}
   end
 
-  ################
-  # TODO Document
-  # @return
+  # @return [Array] of [ratio, step, nearest-hundredth cents, nearest-hundredth-cent difference] tuples for each ratio of self
+  #
   # @example
-  # @param
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.harmonic).maps_on
+  #   => [[1/1, 0\8, 0.0, 0.0], [9/8, 1\8, 200.0, 3.91], ...]
+  #
+  # @param step [Integer] modulo used to compute step numbers, defaults to scale count
   #
   def maps_on(step=modulo)
     ratios.map{|r| [r, r.step(step), r.to_cents.nearest_hundredth.value, r.to_cents.nearest_hundredth_difference.value]}
