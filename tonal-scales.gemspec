@@ -27,7 +27,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "typhoeus", ["~> 1"]
   spec.add_runtime_dependency "pathname", ["~> 0"]
   spec.add_runtime_dependency "readline", ["~> 0"]
-  spec.add_runtime_dependency "readline-ext", ["~> 0"]
   spec.add_runtime_dependency "activesupport", ["~> 8 "]
   spec.add_runtime_dependency "terminal-table", ["~> 4"]
   spec.add_development_dependency "rspec", ["~> 3"]
