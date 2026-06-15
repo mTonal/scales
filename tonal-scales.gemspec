@@ -25,7 +25,6 @@ Gem::Specification.new do |spec|
   spec.add_runtime_dependency "erb", ["~> 6"]
   spec.add_runtime_dependency "csv", ["~> 3"]
   spec.add_runtime_dependency "typhoeus", ["~> 1"]
-  spec.add_runtime_dependency "pathname", ["~> 0"]
   spec.add_runtime_dependency "readline", ["~> 0"]
   spec.add_runtime_dependency "activesupport", ["~> 8 "]
   spec.add_runtime_dependency "terminal-table", ["~> 4"]
