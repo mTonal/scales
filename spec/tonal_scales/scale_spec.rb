@@ -356,6 +356,10 @@ RSpec.describe Tonal::Scale do
       it { expect(described_class.cps).to eq Tonal::Scale.new(35/32r, 5/4r, 21/16r, 3/2r, 7/4r, 15/8r) }
     end
 
+    describe ".diamond" do
+      it { expect(described_class.diamond(1, 3, 5, 7)).to eq Tonal::Scale.new(1/1r, 8/7r, 7/6r, 6/5r, 5/4r, 4/3r, 7/5r, 10/7r, 3/2r, 8/5r, 5/3r, 12/7r, 7/4r) }
+    end
+
     describe ".edo" do
       it { expect(described_class.edo(3)).to eq Tonal::Scale.new(2**(0.0/3), 2**(1.0/3), 2**(2.0/3)) }
     end
@@ -395,6 +399,16 @@ RSpec.describe Tonal::Scale do
     describe ".superpartient" do
       it { expect(described_class.superpartient).to eq Tonal::Scale.new(1/1r, 13/11r, 6/5r, 11/9r, 5/4r, 9/7r, 4/3r, 7/5r, 3/2r, 5/3r) }
     end
+  end
+end
+
+RSpec.describe Tonal::Scale::Diamond do
+  describe "#name" do
+    it { expect(described_class.new(set: [1, 3, 5, 7]).name).to eq "Tonality diamond, [1, 3, 5, 7]" }
+  end
+
+  describe "#description" do
+    it { expect(described_class.new(set: [1, 3, 5, 7]).description).to eq "Tonality diamond: all ratios p/q for p, q in [1, 3, 5, 7], reduced to the octave" }
   end
 end
 

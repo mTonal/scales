@@ -4,7 +4,7 @@ require "tonal/scales/constructors"
 class Tonal::Scale
   extend Forwardable
 
-  def_delegators :@scale, :entries, :count, :length, :find, :first, :each, :each_with_index, :&, :+, :-, :==, :to_a, :each_cons, :each_slice, :collect, :delete, :intersection, :replace
+  def_delegators :@scale, :entries, :count, :length, :find, :find_index, :first, :each, :each_with_index, :&, :+, :-, :==, :to_a, :each_cons, :each_slice, :collect, :delete, :intersection, :replace
   def_delegators :@analysis, # Analysis::Approximations
                              :step_best_expressing,
                              :ratio_best_expressing,

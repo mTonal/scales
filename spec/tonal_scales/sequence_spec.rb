@@ -32,6 +32,10 @@ RSpec.describe Tonal::Sequence do
       it { expect(described_class.cps(set: [1,3,5,7])).to eq described_class.new(3/1r, 5/1r, 7/1r, 15/1r, 21/1r, 35/1r) }
     end
 
+    describe ".diamond" do
+      it { expect(described_class.diamond(set: [1, 3])).to eq described_class.new(1/1r, 1/3r, 3/1r, 1/1r) }
+    end
+
     describe ".harmonic" do
       it { expect(described_class.harmonic).to eq described_class.new(8/1r, 9/1r, 10/1r, 11/1r, 12/1r, 13/1r, 14/1r, 15/1r, 16/1r) }
     end

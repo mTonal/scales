@@ -89,6 +89,16 @@ class Tonal::Scale
         Cps.new(set:, take:)
       end
 
+      # @return [Tonal::Scale::Diamond] a tonality diamond scale for the given set of odd integers
+      # @example
+      #   Tonal::Scale.diamond(1, 3, 5, 7)
+      #   => [1/1, 8/7, 7/6, 6/5, 5/4, 4/3, 7/5, 10/7, 3/2, 8/5, 5/3, 12/7, 7/4]
+      # @param set [Array<Integer>] the set of odd integers used to build the diamond
+      #
+      def diamond(*set)
+        Diamond.new(set:)
+      end
+
       # @return [Tonal::Scale::Edo] the equally divided of the octave scale for the given modulo
       # @example
       #   Tonal::Scale.edo(7)

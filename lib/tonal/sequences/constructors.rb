@@ -49,6 +49,12 @@ class Tonal::Sequence
 
       # TODO Document
       #
+      def diamond(set: [1, 3, 5, 7])
+        Diamond.new(set:)
+      end
+
+      # TODO Document
+      #
       def edo(modulo:)
         Edo.new(modulo:)
       end
