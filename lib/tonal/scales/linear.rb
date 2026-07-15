@@ -1,6 +1,6 @@
 class Tonal::Scale::Linear < Tonal::Scale
   def init_sequence
-    Tonal::Sequence::Linear.new(generator: @args[:generator], upto: @args[:upto], limit: @args[:limit], equave: @args[:equave], threshold: @args[:threshold], schizma: @args[:schizma], by_threshold: @args[:by_threshold])
+    Tonal::Sequence::Linear.new(generator: @args[:generator], upto: @args[:upto], limit: @args[:limit], equave: @args[:equave], threshold: @args[:threshold], schizma: @args[:schizma], by_threshold: @args[:by_threshold], centered: @args[:centered])
   end
 
   def name

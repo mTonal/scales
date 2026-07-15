@@ -110,20 +110,21 @@ class Tonal::Sequence
       end
 
       # @return [Tonal::Sequence::Linear] a sequence derived by stacking a generator interval
-      #
-      # @example
-      #   Tonal::Sequence.linear => [1/1, 2187/2048, 9/8, 81/64, 729/512, 3/2, 27/16, 243/128, ...]
-      #
+      # @example Uncentered (1/1 at one end of the generator chain)
+      #   Tonal::Sequence.linear => [1/1, 3/2, 9/4, 27/8, 81/16, 243/32, 729/64, 2187/128, 6561/256, 19683/512, 59049/1024, 177147/2048]
+      # @example Centered (1/1 in the middle of the generator chain, disjunction maximally distant from 1/1)
+      #   Tonal::Sequence.linear(centered: true) => [64/729, 32/243, 16/81, 8/27, 4/9, 2/3, 1/1, 3/2, 9/4, 27/8, 81/16, 243/32]
       # @param generator [Rational] the interval stacked to generate the sequence, default 3/2
-      # @param upto [Integer] maximum number of tones to generate
-      # @param limit [Integer] prime limit for including tones
+      # @param upto [Integer] number of tones to generate (used when by_threshold is false)
+      # @param limit [Integer] maximum number of iterations when searching by threshold
       # @param equave [Rational] the interval of equivalence, default 2/1
-      # @param threshold [Tonal::Cents] minimum step size below which tones are collapsed
-      # @param schizma [Boolean] whether to include schismatic tones
-      # @param by_threshold [Boolean] whether to filter by the comma threshold
+      # @param threshold [Tonal::Cents] proximity to equave at which generation stops (used when by_threshold is true)
+      # @param schizma [Boolean] whether to include the schismatic closing tone when by_threshold is true
+      # @param by_threshold [Boolean] whether to stop generation by threshold proximity rather than a fixed count
+      # @param centered [Boolean] when true, 1/1 is placed in the middle of the generator chain so the disjunction falls maximally far from it
       #
-      def linear(generator: 3/2r, upto: 12, limit: 400, equave: Tonal::Scale::DEFAULT_EQUAVE, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: false)
-        Linear.new(generator:, upto:, limit:, equave:, threshold:, schizma:, by_threshold:)
+      def linear(generator: 3/2r, upto: 12, limit: 400, equave: Tonal::Scale::DEFAULT_EQUAVE, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: false, centered: false)
+        Linear.new(generator:, upto:, limit:, equave:, threshold:, schizma:, by_threshold:, centered:)
       end
 
       # @return [Tonal::Sequence::Recurrence] a sequence derived from a recurrence relation

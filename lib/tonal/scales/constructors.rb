@@ -133,19 +133,22 @@ class Tonal::Scale
         IntraProportional.new(ratios: ratios, segments:, left_range:, right_range:)
       end
 
-      # @return [Tonal::Scale::Linear] a scale constructed from a superposed generator
-      # @example
+      # @return [Tonal::Scale::Linear] a scale constructed by stacking a generator interval
+      # @example Uncentered (1/1 at one end of the generator chain)
       #   Tonal::Scale.linear => [1/1, 2187/2048, 9/8, 19683/16384, 81/64, 177147/131072, 729/512, 3/2, 6561/4096, 27/16, 59049/32768, 243/128]
-      # @param ratio [Tonal::Ratio, Numeric]
-      # @param upto [Numeric]
-      # @param limit [Numeric]
-      # @param equave [Tonal::Ratio, Numeric]
-      # @param threshold [Tonal::Cents, Numeric]
-      # @param schizma [Boolean]
-      # @param by_threshold [Boolean]
+      # @example Centered (1/1 in the middle of the generator chain, disjunction maximally distant from 1/1)
+      #   Tonal::Scale.linear(centered: true) => [1/1, 256/243, 9/8, 32/27, 81/64, 4/3, 1024/729, 3/2, 128/81, 27/16, 16/9, 243/128]
+      # @param generator [Tonal::Ratio, Numeric] the interval stacked to build the scale, default 3/2
+      # @param upto [Integer] number of tones to generate (used when by_threshold is false)
+      # @param limit [Integer] maximum number of iterations when searching by threshold
+      # @param equave [Tonal::Ratio, Numeric] the interval of equivalence, default 2/1
+      # @param threshold [Tonal::Cents, Numeric] proximity to equave at which generation stops (used when by_threshold is true)
+      # @param schizma [Boolean] whether to include the schismatic closing tone when by_threshold is true
+      # @param by_threshold [Boolean] whether to stop generation by threshold proximity rather than a fixed count
+      # @param centered [Boolean] when true, 1/1 is placed in the middle of the generator chain so the disjunction falls maximally far from it
       #
-      def linear(generator=3/2r, upto: 12, limit: 400, equave: Tonal::Scale::DEFAULT_EQUAVE, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: true)
-        Linear.new(generator: generator, upto:, limit:, equave:, threshold:, schizma:, by_threshold:)
+      def linear(generator=3/2r, upto: 12, limit: 400, equave: Tonal::Scale::DEFAULT_EQUAVE, threshold: Tonal::Comma.ditonic.to_cents, schizma: false, by_threshold: true, centered: false)
+        Linear.new(generator: generator, upto:, limit:, equave:, threshold:, schizma:, by_threshold:, centered:)
       end
 
       # @return [Tonal::Scale::Subharmonic] the sub-harmonic sequence starting at fundamental
