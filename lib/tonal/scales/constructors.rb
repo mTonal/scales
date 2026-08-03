@@ -109,6 +109,16 @@ class Tonal::Scale
         Edo.new(modulo: modulo)
       end
 
+      # @return [Tonal::Scale::Genus] a Euler-Fokker genus scale (harmonic-space lattice)
+      # @example
+      #   Tonal::Scale.genus(factors: {3 => 2, 5 => 1})
+      #   => [1/1, 9/8, 5/4, 45/32, 3/2, 15/8]
+      # @param factors [Hash{Integer=>Integer}] prime => maximum exponent (inclusive); each prime ranges over 0..exponent and every combination is multiplied to form the lattice
+      #
+      def genus(factors: {3 => 1, 5 => 1})
+        Genus.new(factors:)
+      end
+
       # @return [Tonal::Scale::Harmonic] the harmonic sequence starting at fundamental
       # @example
       #   Tonal::Scale.harmonic
@@ -131,6 +141,17 @@ class Tonal::Scale
       #
       def intra_proportional(*ratios, segments: 2, left_range: 0, right_range: 0)
         IntraProportional.new(ratios: ratios, segments:, left_range:, right_range:)
+      end
+
+      # @return [Tonal::Scale::Lattice] a multi-generator Euler-Fokker/Wilson harmonic lattice
+      # @example
+      #   Tonal::Scale.lattice(primes: [3, 5, 7, 11, 13], max_weight: 2)
+      #   => 51 ratios formed from at most 2 of the primes at a time, each raised to +1 or -1
+      # @param primes [Array<Integer>] the primes, each an independent bidirectional axis through 1/1
+      # @param max_weight [Integer] the maximum number of primes combined at once (axes simultaneously active)
+      #
+      def lattice(primes: [3, 5, 7, 11, 13], max_weight: 2)
+        Lattice.new(primes:, max_weight:)
       end
 
       # @return [Tonal::Scale::Linear] a scale constructed by stacking a generator interval

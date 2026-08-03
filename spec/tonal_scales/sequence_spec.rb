@@ -36,8 +36,16 @@ RSpec.describe Tonal::Sequence do
       it { expect(described_class.diamond(set: [1, 3])).to eq described_class.new(1/1r, 1/3r, 3/1r, 1/1r) }
     end
 
+    describe ".genus" do
+      it { expect(described_class.genus(factors: {3 => 2, 5 => 1})).to eq described_class.new(1/1r, 5/1r, 3/1r, 15/1r, 9/1r, 45/1r) }
+    end
+
     describe ".harmonic" do
       it { expect(described_class.harmonic).to eq described_class.new(8/1r, 9/1r, 10/1r, 11/1r, 12/1r, 13/1r, 14/1r, 15/1r, 16/1r) }
+    end
+
+    describe ".lattice" do
+      it { expect(described_class.lattice(primes: [3, 5], max_weight: 1)).to eq described_class.new(1/3r, 1/5r, 1/1r, 5/1r, 3/1r) }
     end
 
     #describe ".intra_proportional" do

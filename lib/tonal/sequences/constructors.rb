@@ -83,6 +83,17 @@ class Tonal::Sequence
         Edo.new(modulo:)
       end
 
+      # @return [Tonal::Sequence::Genus] a Euler-Fokker genus sequence (harmonic-space lattice)
+      #
+      # @example
+      #   Tonal::Sequence.genus(factors: {3 => 2, 5 => 1}) => [1/1, 5/1, 3/1, 15/1, 9/1, 45/1]
+      #
+      # @param factors [Hash{Integer=>Integer}] prime => maximum exponent (inclusive)
+      #
+      def genus(factors: {3 => 1, 5 => 1})
+        Genus.new(factors:)
+      end
+
       # @return [Tonal::Sequence::Harmonic] a harmonic series sequence
       #
       # @example
@@ -107,6 +118,18 @@ class Tonal::Sequence
       #
       def intra_proportional(ratios: [], subdivision: 2, left_range: subdivision-1, right_range: subdivision-1)
         IntraProportional.new(ratios:, subdivision:, left_range:, right_range:)
+      end
+
+      # @return [Tonal::Sequence::Lattice] a multi-generator Euler-Fokker/Wilson harmonic lattice sequence
+      #
+      # @example
+      #   Tonal::Sequence.lattice(primes: [3, 5, 7, 11, 13], max_weight: 2) => 51 unreduced ratios
+      #
+      # @param primes [Array<Integer>] the primes, each an independent bidirectional axis through 1/1
+      # @param max_weight [Integer] the maximum number of primes combined at once (axes simultaneously active)
+      #
+      def lattice(primes: [3, 5, 7, 11, 13], max_weight: 2)
+        Lattice.new(primes:, max_weight:)
       end
 
       # @return [Tonal::Sequence::Linear] a sequence derived by stacking a generator interval

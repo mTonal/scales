@@ -81,8 +81,10 @@ Each scale type has a paired `Tonal::Sequence` subclass (raw series) and a `Tona
 | `.convolved_proportional` | Proportional intervals convolved over segments | `Tonal::Scale.convolved_proportional(3/2r, 7/4r)` → `[3/2, 13/8, 7/4]` |
 | `.cps` | Combination Product Set | `Tonal::Scale.cps` → `[35/32, 5/4, 21/16, 3/2, 7/4, 15/8]` |
 | `.edo` | Equal Division of the Octave | `Tonal::Scale.edo(12)` |
+| `.genus` | Euler-Fokker genus (harmonic-space lattice) | `Tonal::Scale.genus(factors: {3 => 2, 5 => 1})` → `[1/1, 9/8, 5/4, 45/32, 3/2, 15/8]` |
 | `.harmonic` | Harmonic series over a range | `Tonal::Scale.harmonic` → `[1/1, 9/8, 5/4, 11/8, 3/2, 13/8, 7/4, 15/8]` |
 | `.intra_proportional` | Proportional intervals within a range | `Tonal::Scale.intra_proportional(3/2r, 7/4r)` → `[3/2, 13/8, 7/4]` |
+| `.lattice` | Multi-generator Euler-Fokker/Wilson harmonic lattice | `Tonal::Scale.lattice(primes: [3, 5, 7, 11, 13], max_weight: 2)` → 51 ratios |
 | `.linear` | Linear (generator-based) scale | `Tonal::Scale.linear` → 12-tone Pythagorean |
 | `.polyharmonic` | Multiple harmonic series | `Tonal::Scale.polyharmonic` |
 | `.proportional` | Proportional series between two ratios | `Tonal::Scale.proportional(3/2r, 7/4r)` → `[1/1, 5/4, 3/2, 7/4]` |
