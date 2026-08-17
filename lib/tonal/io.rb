@@ -69,6 +69,34 @@ class Tonal::Scale
       def from_scalarchive(scale_name)
         Tonal::IO::Scalarchive.scale(scale_name)
       end
+
+      # @return [Array<String>] list of scale names in the Scala archive
+      # @example
+      #   Tonal::Scale.scalarchive_toc
+      #   => "05-19                                                            5 out of 19-tET"
+      #      "05-22                                                            Pentatonic \"generator\" of 09-22.scl"
+      #      "05-24                                                            5 out of 24-tET, symmetrical"
+      #      ...
+      #
+      def scalarchive_toc
+        Tonal::IO::Scalarchive.toc
+      end
+
+      # @return [Array<String>] list of scale names in the Scala archive that match the query
+      # @example
+      #   Tonal::Scale.search_scalarchive("wilson")
+      #   => ...
+      #      "wilson2                             Wilson 19-tone (1975)"
+      #      "wilson3                             Wilson 19-tone"
+      #      "wilson5                             Wilson's 22-tone 5-limit scale"
+      #      "wilson7                             Wilson's 22-tone 7-limit 'marimba' scale"
+      #      ...
+      #
+      # @param [String] a query string to search for in the Scala archive.
+      #
+      def search_scalarchive(query)
+        Tonal::IO::Scalarchive.search(query)
+      end
     end
   end
 end
