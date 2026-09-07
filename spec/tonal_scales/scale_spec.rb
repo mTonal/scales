@@ -502,6 +502,112 @@ RSpec.describe Tonal::Scale::Cps do
       expect(described_class.default_take(7)).to eq 3
     end
   end
+
+  describe "#chords" do
+    let(:eikosany) { Tonal::Scale.cps(1, 3, 5, 7, 9, 11, take: 3) }
+
+    it { expect(eikosany.chords).to all(be_an_instance_of(Tonal::Scale::Chord)) }
+    it { expect(eikosany.chords).to all(satisfy{|chord| chord.steps.none?(&:nil?)}) }
+    it { expect(eikosany.chords.count).to eq 30 }
+
+    context "with the default hexany" do
+      let(:hexany) { Tonal::Scale.cps }
+
+      it "has the eight faces of the octahedron - four otonal, four utonal" do
+        expect(hexany.chords.count).to eq 8
+        expect(hexany.chords.map(&:name)).to eq [
+          "Otonal +1", "Otonal +3", "Otonal +5", "Otonal +7",
+          "Utonal 1.3.5", "Utonal 1.3.7", "Utonal 1.5.7", "Utonal 3.5.7"
+        ]
+      end
+
+      it { expect(hexany.chords.map(&:ratios)).to eq [
+        [Tonal::ReducedRatio.new(5,4), Tonal::ReducedRatio.new(3,2), Tonal::ReducedRatio.new(7,4)],
+        [Tonal::ReducedRatio.new(21,16), Tonal::ReducedRatio.new(3,2), Tonal::ReducedRatio.new(15,8)],
+        [Tonal::ReducedRatio.new(35,32), Tonal::ReducedRatio.new(5,4), Tonal::ReducedRatio.new(15,8)],
+        [Tonal::ReducedRatio.new(35,32), Tonal::ReducedRatio.new(21,16), Tonal::ReducedRatio.new(7,4)],
+        [Tonal::ReducedRatio.new(5,4), Tonal::ReducedRatio.new(3,2), Tonal::ReducedRatio.new(15,8)],
+        [Tonal::ReducedRatio.new(21,16), Tonal::ReducedRatio.new(3,2), Tonal::ReducedRatio.new(7,4)],
+        [Tonal::ReducedRatio.new(35,32), Tonal::ReducedRatio.new(5,4), Tonal::ReducedRatio.new(7,4)],
+        [Tonal::ReducedRatio.new(35,32), Tonal::ReducedRatio.new(21,16), Tonal::ReducedRatio.new(15,8)],
+      ] }
+
+      it { expect(hexany.chords.map(&:steps)).to eq [
+        [1, 3, 4], [2, 3, 5], [0, 1, 5], [0, 2, 4],
+        [1, 3, 5], [2, 3, 4], [0, 1, 4], [0, 2, 5]
+      ] }
+
+      it "exposes the factor tuple behind each note, parenthesized and ratio-ordered" do
+        expect(hexany.chords.map(&:factors)).to eq [
+          "(1)(5),(1)(3),(1)(7)", "(3)(7),(3)(1),(3)(5)", "(5)(7),(5)(1),(5)(3)", "(7)(5),(7)(3),(7)(1)",
+          "(1)(5),(1)(3),(3)(5)", "(3)(7),(1)(3),(1)(7)", "(5)(7),(1)(5),(1)(7)", "(5)(7),(3)(7),(3)(5)"
+        ]
+      end
+    end
+
+    it "generalizes the factor column to take-tuples for larger CPS" do
+      expect(eikosany.chords.first.factors).to eq "(1)(3)(11),(1)(3)(7),(1)(3)(9),(1)(3)(5)"
+    end
+  end
+
+  describe "#note_factors" do
+    let(:hexany) { Tonal::Scale.cps }
+    let(:eikosany) { Tonal::Scale.cps(1, 3, 5, 7, 9, 11, take: 3) }
+
+    it { expect(hexany.note_factors).to eq [[5, 7], [1, 5], [3, 7], [1, 3], [1, 7], [3, 5]] }
+    it { expect(hexany.note_factors.size).to eq hexany.count }
+    it { expect(hexany.note_factors).to all(have_attributes(size: 2)) }
+    it { expect(eikosany.note_factors.compact.size).to eq eikosany.count }
+    it { expect(eikosany.note_factors).to all(have_attributes(size: 3)) }
+
+    it "each tuple's octave-reduced product is that degree's ratio" do
+      hexany.note_factors.each_with_index do |tuple, degree|
+        product = tuple.inject(:*)
+        expect(Tonal::ReducedRatio.new(product).to_r).to eq hexany[degree].to_r
+      end
+    end
+  end
+
+  describe "#shared_factor_graph" do
+    let(:hexany) { Tonal::Scale.cps }
+
+    it { expect(hexany.shared_factor_graph[0]).to eq [[1, [5]], [2, [7]], [4, [7]], [5, [5]]] }
+    it { expect(hexany.shared_factor_graph.values.map(&:size).uniq).to eq [4] }
+    it "omits the complementary pair (no shared factor)" do
+      expect(hexany.shared_factor_graph[0].map(&:first)).not_to include(3)
+    end
+    it "is symmetric" do
+      graph = hexany.shared_factor_graph
+      graph.each do |degree, neighbours|
+        neighbours.each { |(other, shared)| expect(graph[other]).to include([degree, shared]) }
+      end
+    end
+  end
+
+  describe "#factor_walk" do
+    let(:hexany) { Tonal::Scale.cps }
+
+    it { expect(hexany.factor_walk).to match_array(hexany.indices) }
+    it { expect(hexany.factor_walk(start: 2).first).to eq 2 }
+    it { expect(Tonal::Scale.cps(1, 3, 5, 7, 9, take: 2).factor_walk.size).to eq 10 }
+
+    it "every adjacent pair shares a generating factor" do
+      tuples = hexany.note_factors
+      hexany.factor_walk.each_cons(2) { |a, b| expect(tuples[a] & tuples[b]).not_to be_empty }
+    end
+
+    it "closes the loop when closed: true" do
+      tuples = hexany.note_factors
+      walk = hexany.factor_walk(closed: true)
+      expect(tuples[walk.last] & tuples[walk.first]).not_to be_empty
+    end
+
+    it "stays factor-coherent for the eikosany" do
+      eikosany = Tonal::Scale.cps(1, 3, 5, 7, 9, 11, take: 3)
+      tuples = eikosany.note_factors
+      eikosany.factor_walk.each_cons(2) { |a, b| expect(tuples[a] & tuples[b]).not_to be_empty }
+    end
+  end
 end
 
 # TO CONSIDER

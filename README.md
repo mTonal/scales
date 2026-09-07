@@ -66,7 +66,23 @@ Reads and writes scales in standard formats:
 Tonal::Scale.from_scl("path/to/scale.scl")     # parse a Scala SCL file
 Tonal::Scale.from_scalarchive("wilson7")        # load from the Scala archive
 scale.to_scl("my-scale")                        # write to SCL file
+scale.to_kbm("my-scale")                        # write a Scala keyboard map
+Tonal::Scale.cps.to_musaic("hexany")            # write a musaic/1.0 program (CPS only) - block chords
+Tonal::Scale.cps.to_musaic("hexany", form: :arpeggio)  # ...one tone at a time instead
 ```
+
+### CPS factor structure
+
+A [Combination Product Set](https://en.xen.wiki/w/Combination_product_set) note is a product of `take` factors from the generating set. These methods expose that structure — useful for driving a walk between notes that share a generating factor:
+
+```ruby
+scale = Tonal::Scale.cps                        # the 2)4 hexany on 1·3·5·7
+scale.note_factors                              # => [[5,7],[1,5],[3,7],[1,3],[1,7],[3,5]]  (by scale degree)
+scale.shared_factor_graph[0]                    # => [[1,[5]],[2,[7]],[4,[7]],[5,[5]]]  (degree => [neighbour, shared factors])
+scale.factor_walk                               # => [0,1,4,2,3,5]  — a degree ordering where every step shares a factor
+```
+
+`to_musaic` builds on this: it emits the scale as a Just-Intonation `tuning`, and `Tonal::Scale::Cps#chords` as a matrix (block `chords`, or an `arpeggio` of single `notes`) that Musaic's `across_rows` transitions walk by shared tones — hence shared factors.
 
 ## Scale Types
 

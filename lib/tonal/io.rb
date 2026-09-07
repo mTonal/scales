@@ -34,6 +34,37 @@ class Tonal::Scale
       ).write
     end
 
+    # @return [Integer] byte count of data written to a musaic/1.0 YAML file
+    # @note Only Combination Product Set scales (Tonal::Scale::Cps) are supported.
+    #
+    # @example
+    #   Tonal::Scale.cps.to_musaic("hexany", tempo: 110)
+    #
+    # @param file_name [String] YAML file name
+    # @param fave [Boolean] whether to place in the "faves" sub-folder of the Musaic folder
+    # @param location [String] to write file to; if nil, writes to the root of the Musaic folder
+    # @param base_midi [Integer] MIDI note assigned to degree 0 (1/1)
+    # @param tempo [Integer, nil] program tempo; omitted from the file when nil
+    # @param form [Symbol] :chords (block simultaneities, default) or :arpeggio (one tone at a time)
+    # @param durations [Array<String>, nil] the region's duration row (default ["1/2"] for :chords, ["1/4"] for :arpeggio)
+    #
+    def to_musaic(file_name=nil, fave: false, location: nil, base_midi: 60, tempo: nil, form: :chords, durations: nil)
+      raise NotImplementedError, "to_musaic currently supports CPS scales" unless is_a?(Tonal::Scale::Cps)
+      fave_location = fave ? Tonal::IO::Musaic.faves_directory : ""
+      location = location.nil? ? Tonal::IO::Musaic.root_directory.join(fave_location, count.to_s) : Pathname.new("").join(location, fave_location, count.to_s)
+      Tonal::IO::Musaic.new(file_name || self.name,
+        name: self.name,
+        description: self.description,
+        pitches: self.to_r.map(&:to_s),
+        location: location,
+        scale: self,
+        base_midi: base_midi,
+        tempo: tempo,
+        form: form,
+        durations: durations
+      ).write
+    end
+
     def self.included(base)
       base.extend(ClassMethods)
     end

@@ -12,6 +12,10 @@ module Tonal
       mtonal_directory.join("My KBM files")
     end
 
+    def self.musaic_directory
+      mtonal_directory.join("My Musaic files")
+    end
+
     def self.work_directory
       mtonal_directory.join("tmp")
     end
