@@ -420,6 +420,69 @@ RSpec.describe Tonal::Scale::Diamond do
   describe "#description" do
     it { expect(described_class.new(set: [1, 3, 5, 7]).description).to eq "Tonality diamond: all ratios p/q for p, q in [1, 3, 5, 7], reduced to the octave" }
   end
+
+  describe "#chords" do
+    let(:diamond) { Tonal::Scale.diamond(1, 3, 5, 7) }
+
+    it { expect(diamond.chords).to all(be_an_instance_of(Tonal::Scale::Chord)) }
+    it { expect(diamond.chords).to all(satisfy { |chord| chord.steps.none?(&:nil?) }) }
+
+    it "defaults n to the generating-set count - the full otonality/utonality" do
+      expect(diamond.chords.count).to eq 8
+      expect(diamond.chords).to all(have_attributes(count: 4))
+      expect(diamond.chords.map(&:name)).to eq [
+        "Otonal tetrad, 1.3.5.7/1", "Otonal tetrad, 1.3.5.7/3",
+        "Otonal tetrad, 1.3.5.7/5", "Otonal tetrad, 1.3.5.7/7",
+        "Utonal tetrad, 1/1.3.5.7", "Utonal tetrad, 3/1.3.5.7",
+        "Utonal tetrad, 5/1.3.5.7", "Utonal tetrad, 7/1.3.5.7"
+      ]
+    end
+
+    it { expect(diamond.chords.first.ratios).to eq [
+      Tonal::ReducedRatio.new(1, 1), Tonal::ReducedRatio.new(5, 4),
+      Tonal::ReducedRatio.new(3, 2), Tonal::ReducedRatio.new(7, 4)
+    ] }
+
+    it { expect(diamond.chords.first.steps).to eq [0, 4, 8, 12] }
+    it { expect(diamond.chords.first.factors).to eq "(1)/(1),(5)/(1),(3)/(1),(7)/(1)" }
+    it { expect(diamond.chords[4].factors).to eq "(1)/(1),(1)/(7),(1)/(3),(1)/(5)" }
+
+    it "takes the Ntad number as an argument, drawn from the leading harmonic-limit subset" do
+      triads = diamond.chords(3)
+      expect(triads.count).to eq 8
+      expect(triads).to all(have_attributes(count: 3))
+      expect(triads.map(&:name)).to eq [
+        "Otonal triad, 1.3.5/1", "Otonal triad, 1.3.5/3",
+        "Otonal triad, 1.3.5/5", "Otonal triad, 1.3.5/7",
+        "Utonal triad, 1/1.3.5", "Utonal triad, 3/1.3.5",
+        "Utonal triad, 5/1.3.5", "Utonal triad, 7/1.3.5"
+      ]
+    end
+
+    it "names larger Ntads by Wilson's terms" do
+      expect(Tonal::Scale.diamond(1, 3, 5, 7, 9, 11).chords.map(&:name).first).to eq "Otonal hexad, 1.3.5.7.9.11/1"
+    end
+
+    it { expect(diamond.chords(1)).to eq [] }
+    it { expect(diamond.chords(5)).to eq [] }
+
+    context "with a range - every nested sub-Ntad up to the limit, smallest first" do
+      it { expect(diamond.chords(2..4).map(&:count)).to eq [2] * 8 + [3] * 8 + [4] * 8 }
+
+      it "skips out-of-range levels rather than raising" do
+        expect(diamond.chords(3..9).map(&:count)).to eq [3] * 8 + [4] * 8
+      end
+
+      it "reads a beginless range as starting at dyads" do
+        expect(diamond.chords(..3).first.name).to eq "Otonal dyad, 1.3/1"
+      end
+
+      it "reads an endless range as running to the full generating-set count" do
+        eleven_limit = Tonal::Scale.diamond(1, 3, 5, 7, 9, 11)
+        expect(eleven_limit.chords(4..).map(&:count).uniq).to eq [4, 5, 6]
+      end
+    end
+  end
 end
 
 RSpec.describe Tonal::Scale::Genus do
