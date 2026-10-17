@@ -73,6 +73,12 @@ RSpec.shared_examples "a Tonal::Scale" do
       expect(subject.description).to eq "Assigned description"
     end
   end
+
+  describe "#to_musaic" do
+    it "is offered only by scales that have chords" do
+      expect(subject.respond_to?(:to_musaic)).to eq subject.respond_to?(:chords)
+    end
+  end
 end
 
 RSpec.describe "Tonal::Scale contract" do

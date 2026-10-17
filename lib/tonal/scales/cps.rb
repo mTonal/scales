@@ -1,4 +1,8 @@
+require "tonal/scales/chord_bearing"
+
 class Tonal::Scale::Cps < Tonal::Scale
+  include Tonal::Scale::ChordBearing
+
   # Raised when a CPS has no factor-coherent ordering of its notes (only
   # possible for a disconnected #shared_factor_graph - a pathological set/take).
   NoFactorWalk = Class.new(StandardError)

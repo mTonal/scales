@@ -1,4 +1,8 @@
+require "tonal/scales/chord_bearing"
+
 class Tonal::Scale::Diamond < Tonal::Scale
+  include Tonal::Scale::ChordBearing
+
   # Erv Wilson's name for a full otonal/utonal chord, keyed by voice count.
   NTAD_NAMES = {
     2 => "dyad", 3 => "triad", 4 => "tetrad", 5 => "pentad", 6 => "hexad",

@@ -95,7 +95,7 @@ RSpec.describe Tonal::IO::Musaic do
     end
   end
 
-  describe "Tonal::Scale::IO#to_musaic" do
+  describe "Tonal::Scale::ChordBearing#to_musaic" do
     it "supports the eikosany" do
       dir = Dir.mktmpdir
       Tonal::Scale.cps(1, 3, 5, 7, 9, 11, take: 3).to_musaic("eikosany", location: dir)
@@ -103,9 +103,8 @@ RSpec.describe Tonal::IO::Musaic do
       expect(doc.dig("program", "tuning", "ratios").size).to eq 21
     end
 
-    it "raises for a scale without embedded chords" do
-      expect { Tonal::Scale.edo(12).to_musaic("nope", location: Dir.mktmpdir) }
-        .to raise_error(NotImplementedError)
+    it "is not offered by a scale without embedded chords" do
+      expect(Tonal::Scale.edo(12)).not_to respond_to(:to_musaic)
     end
 
     describe "a tonality diamond" do

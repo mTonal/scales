@@ -1,4 +1,8 @@
+require "tonal/scales/chord_bearing"
+
 class Tonal::Scale::Lattice < Tonal::Scale
+  include Tonal::Scale::ChordBearing
+
   def init_sequence
     Tonal::Sequence::Lattice.new(primes: @args[:primes], max_weight: @args[:max_weight])
   end

@@ -34,23 +34,6 @@ class Tonal::Scale
       ).write
     end
 
-    # @return [Integer] byte count of data written to a musaic/1.0 YAML file
-    # @note Requires a scale that exposes embedded chords: Tonal::Scale::Cps,
-    #   Tonal::Scale::Diamond or Tonal::Scale::Lattice. The scale's whole #chords
-    #   set is exported; to write a narrower selection call #to_musaic on the set
-    #   itself, e.g. Tonal::Scale.diamond.chords(4..6).to_musaic("diamond").
-    #
-    # @example
-    #   Tonal::Scale.cps.to_musaic("hexany", tempo: 110)
-    #   Tonal::Scale.diamond.chords(4).to_musaic("diamond-tetrads")
-    #
-    # @see Tonal::Scale::ChordSet#to_musaic for the parameters
-    #
-    def to_musaic(file_name=nil, **kwargs)
-      raise NotImplementedError, "to_musaic needs a scale with #chords (CPS, Diamond, Lattice)" unless respond_to?(:chords)
-      chords.to_musaic(file_name, **kwargs)
-    end
-
     def self.included(base)
       base.extend(ClassMethods)
     end
