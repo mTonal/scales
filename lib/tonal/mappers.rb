@@ -3,6 +3,10 @@ class Tonal::Scale::Mappers
 
   def_delegators :@scale, :count, :length, :ratios, :first, :modulo, :ratio_best_expressing
 
+  PITCH_BEND_CENTER = 8192
+  PITCH_BEND_MAX = 16383
+  MPE_BEND_RANGE = 48
+
   def initialize(scale=nil)
     @scale = scale
   end
@@ -60,6 +64,27 @@ class Tonal::Scale::Mappers
   def to_midi(modulo=count, midi_root: Tonal::Midi::Note::C4_MIDI_NUMBER, values_only: true)
     @scale.steps(modulo).map{|step| step.step_to_midi(midi_root: midi_root)}.map do |midi_number|
       values_only ? midi_number.value : midi_number
+    end
+  end
+
+  # @return [Array] of [ratio, MIDI number, cents offset, 14-bit pitch bend, signed pitch bend] tuples for each ratio of self.
+  #   The MIDI number is the nearest 12-TET note; the pitch bend retunes it to the ratio.
+  # @note bend_range must match the pitch bend range of the receiving instrument (MPE member channels default to 48 semitones)
+  # @example
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)).to_pitch_bends
+  #   => [[1/1, 60, 0.0, 8192, 0], [5/4, 64, -13.69, 8169, -23], [3/2, 67, 1.96, 8195, 3], [7/4, 70, -31.17, 8139, -53]]
+  #   Tonal::Scale::Mappers.new(Tonal::Scale.new(1/1r, 5/4r)).to_pitch_bends(bend_range: 2)
+  #   => [[1/1, 60, 0.0, 8192, 0], [5/4, 64, -13.69, 7631, -561]]
+  #
+  # @param midi_root [Integer] MIDI number of the 1/1 of self, default is middle C
+  # @param bend_range [Numeric] pitch bend range in semitones, either side of center
+  #
+  def to_pitch_bends(midi_root: Tonal::Midi::Note::C4_MIDI_NUMBER, bend_range: MPE_BEND_RANGE)
+    ratios.map do |ratio|
+      cents = ratio.to_cents
+      offset = cents.nearest_hundredth_difference.value
+      bend = pitch_bend_for(offset, bend_range)
+      [ratio, midi_root + (cents.nearest_hundredth.value / 100).round, offset.round(2), bend, bend - PITCH_BEND_CENTER]
     end
   end
 
@@ -144,5 +169,10 @@ class Tonal::Scale::Mappers
   #
   def maps_on(step=modulo)
     ratios.map{|r| [r, r.step(step), r.to_cents.nearest_hundredth.value, r.to_cents.nearest_hundredth_difference.value]}
+  end
+
+  private
+  def pitch_bend_for(cents, bend_range)
+    (PITCH_BEND_CENTER + cents / (bend_range * 100.0) * PITCH_BEND_CENTER).round.clamp(0, PITCH_BEND_MAX)
   end
 end

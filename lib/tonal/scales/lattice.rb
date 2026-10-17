@@ -11,14 +11,14 @@ class Tonal::Scale::Lattice < Tonal::Scale
     "Euler-Fokker/Wilson lattice: #{@args[:primes]} as independent bidirectional axes, up to #{@args[:max_weight]} simultaneously active"
   end
 
-  # @return [Array<Tonal::Scale::Chord>] the four-note "unit square" tetrads of the lattice -
+  # @return [Tonal::Scale::ChordSet] the four-note "unit square" tetrads of the lattice -
   #   for every pair of primes, each 2x2 block of neighboring points on their shared sub-grid
   #
   # @example
   #   Tonal::Scale.lattice.chords.count => 40
   #
   def chords
-    @args[:primes].combination(2).flat_map do |prime_a, prime_b|
+    squares = @args[:primes].combination(2).flat_map do |prime_a, prime_b|
       [-1, 0].product([-1, 0]).map do |exp_a, exp_b|
         ratios = [[exp_a, exp_b], [exp_a + 1, exp_b], [exp_a, exp_b + 1], [exp_a + 1, exp_b + 1]].map do |a, b|
           raw = Rational(prime_a)**a * Rational(prime_b)**b
@@ -33,5 +33,7 @@ class Tonal::Scale::Lattice < Tonal::Scale
         )
       end
     end
+
+    Tonal::Scale::ChordSet.new(scale: self, chords: squares)
   end
 end

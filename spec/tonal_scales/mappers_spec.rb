@@ -37,6 +37,30 @@ RSpec.describe Tonal::Scale::Mappers do
     end
   end
 
+  describe "#to_pitch_bends" do
+    let(:just_scale) { Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) }
+
+    it "returns the nearest 12-TET MIDI note, cents offset and MPE pitch bends of the notes of the scale" do
+      expect(described_class.new(just_scale).to_pitch_bends).to eq [[1/1r, 60, 0.0, 8192, 0], [5/4r, 64, -13.69, 8169, -23], [3/2r, 67, 1.96, 8195, 3], [7/4r, 70, -31.17, 8139, -53]]
+    end
+
+    it "scales the bend to the given bend range" do
+      expect(described_class.new(just_scale).to_pitch_bends(bend_range: 2)[1]).to eq [5/4r, 64, -13.69, 7631, -561]
+    end
+
+    it "places the 1/1 on the given MIDI root" do
+      expect(described_class.new(just_scale).to_pitch_bends(midi_root: 57).map{|bend| bend[1]}).to eq [57, 61, 64, 67]
+    end
+
+    it "rounds to the next equave's MIDI note when the ratio is nearer to it" do
+      expect(described_class.new(Tonal::Scale.new(1/1r, 1999/1000r)).to_pitch_bends.last[1..2]).to eq [72, -0.87]
+    end
+
+    it "clamps bends that exceed the bend range" do
+      expect(described_class.new(Tonal::Scale.new(1/1r, 13/8r, 7/4r)).to_pitch_bends(bend_range: 0.1).map{|bend| bend[3]}).to eq [8192, 16383, 0]
+    end
+  end
+
   describe "#to_radians" do
     it "returns the radians of the scale" do
       expect(described_class.new(scale).to_radians).to eq [0.0, 0.9, 1.8, 2.69, 3.59, 4.49, 5.39]

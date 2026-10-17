@@ -15,7 +15,7 @@ class Tonal::Scale::Cps < Tonal::Scale
     "Cross Product Set: #{prettified_set}, take: #{assigned_take} - #{self.labels.join(', ')}"
   end
 
-  # @return [Array<Tonal::Scale::Chord>] the harmonies embedded in the CPS - an otonal
+  # @return [Tonal::Scale::ChordSet] the harmonies embedded in the CPS - an otonal
   #   chord for every (take - 1)-subset of factors the products can share, and a utonal
   #   chord for every (take + 1)-subset of the generating set. For the default hexany
   #   these are the eight triangular faces of the octahedron: four otonal, four utonal.
@@ -47,7 +47,7 @@ class Tonal::Scale::Cps < Tonal::Scale
         description: "Utonal chord on the #{voices.count} products of #{name} drawn from factors #{group_labels.join(", ")}")
     end
 
-    otonal + utonal
+    Tonal::Scale::ChordSet.new(scale: self, chords: otonal + utonal)
   end
 
   # @return [Array<Array>] scale-degree-indexed: element +d+ is the generating

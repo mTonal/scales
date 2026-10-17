@@ -17,7 +17,7 @@ class Tonal::Scale::Diamond < Tonal::Scale
     "Tonality diamond: all ratios p/q for p, q in #{assigned_set}, reduced to the octave"
   end
 
-  # @return [Array<Tonal::Scale::Chord>] the otonal and utonal n-ads of the diamond,
+  # @return [Tonal::Scale::ChordSet] the otonal and utonal n-ads of the diamond,
   #   following Erv Wilson's nested tetrad/pentad/hexad/heptad groupings. The n-ad is
   #   the leading harmonic-limit subset of the generating set (n = 4 -> the first four
   #   factors, n = 5 -> the first five, ...). For every common tone drawn from the full
@@ -42,7 +42,17 @@ class Tonal::Scale::Diamond < Tonal::Scale
   #   => ["Otonal tetrad, 1.3.5.7/1", ..., "Otonal pentad, 1.3.5.7.9/1", ..., "Otonal hexad, 1.3.5.7.9.11/1", ...]
   #
   def chords(n = assigned_set.count)
-    ntad_levels(n).flat_map { |level| ntad_chords(level) }
+    Tonal::Scale::ChordSet.new(scale: self, chords: ntad_levels(n).flat_map { |level| ntad_chords(level) })
+  end
+
+  # Writes every nested sub-n-ad (dyads up through the full otonality/utonality) to
+  # a musaic/1.0 YAML file. Pass a narrower selection explicitly via
+  # +chords(n).to_musaic(...)+ - e.g. +diamond.chords(4).to_musaic("tetrads")+.
+  #
+  # @see Tonal::Scale::ChordSet#to_musaic
+  #
+  def to_musaic(file_name = nil, **kwargs)
+    chords(2..).to_musaic(file_name, **kwargs)
   end
 
   private

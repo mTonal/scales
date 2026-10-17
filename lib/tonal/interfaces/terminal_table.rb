@@ -10,6 +10,7 @@ module Tonal
 
       # TODO: Document
       #
+      # TODO: Fix or remove. Integer#approximate_to no longer exists
       def factor_approximations_to(ratio, factor:, range: (1..10))
         Terminal::Table.new(headings: ["#{factor}*i", "(#{factor}*i)/x ~ #{ratio}", "Cents difference to #{ratio}" ], rows: [].tap do |rows|
           range.each do |i|
@@ -20,6 +21,7 @@ module Tonal
 
       # TODO: Document
       #
+      # TODO: Fix or remove. Integer#approximate_to no longer exists
       def approximations_to(ratio, factor:, range: (1..10))
         Terminal::Table.new(headings: ["#{factor}*i", "(#{factor}*i)/x ~ #{ratio}", "Cents difference to #{ratio}" ], rows: [].tap do |rows|
           range.each do |i|
@@ -30,6 +32,7 @@ module Tonal
 
       # @return Terminal::Table of cent differences to ratio within given tolerance for a range of moduli
       # TODO Is this needed?
+      # TODO: Fix or remove. Integer#cents_delta_for no longer exists; prints instead of returning a table
       def cent_diffs(ratio, moduli: (0..53), tolerance: 5)
         moduli.each do |m|
           v = m.cents_delta_for(ratio)
@@ -44,6 +47,7 @@ module Tonal
       #      | 28/27 | 36/35 | 25/24 | 81/80 | 28/27 | 36/35 | 25/24 | 28/27 | 36/35 | 81/80 | 25/24 | 28/27 | 36/35 | 28/27 | 36/35 | 25/24 | 81/80 | 28/27 | 36/35 | 25/24 | 28/27 | 36/35 |
       #      +-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+-------+
       #
+      # TODO: Fix or remove. all_intervals_by_step lives in Tonal::Scale::Analysis and is not delegated here
       def table_of_intervals_at_step(step)
         Terminal::Table.new(rows: [all_intervals_by_step(step).map(&:to_r)])
       end
@@ -62,6 +66,7 @@ module Tonal
       #      | 7 | 15/8 | 16/9 | 9/5   | 20/11 | 11/6  | 24/13 | 13/7  | 28/15 |
       #      +---+------+------+-------+-------+-------+-------+-------+-------+
       #
+      # TODO: Fix or remove. all_intervals_by_steps lives in Tonal::Scale::Analysis and is not delegated here
       def table_of_all_intervals_by_steps
         Terminal::Table.new(rows: all_intervals_by_steps.each_with_index.map{|row,idx| [idx] + row.map(&:to_r)})
       end
@@ -74,6 +79,7 @@ module Tonal
       #      +-------+-------+-------+-------+
       # @param step between note pairs
       #
+      # TODO: Fix or remove. unique_intervals_by_step lives in Tonal::Scale::Analysis and is not delegated here
       def table_of_unique_intervals_at_step(step)
         Terminal::Table.new(rows: [unique_intervals_by_step(step).map(&:to_r).sort])
       end
@@ -92,6 +98,7 @@ module Tonal
       #      | 7 | 16/9  | 9/5   | 20/11 | 11/6  | 24/13 | 13/7  | 28/15 | 15/8 |
       #      +---+-------+-------+-------+-------+-------+-------+-------+------+
       #
+      # TODO: Fix or remove. unique_intervals_by_step_distances lives in Tonal::Scale::Analysis and is not delegated here
       def table_of_unique_intervals_by_step_distances
         Terminal::Table.new(rows: unique_intervals_by_step_distances.each_with_index.map{|row,idx| [idx] + row.map(&:to_r)})
       end
@@ -100,6 +107,7 @@ module Tonal
       # @example TODO
       # @params [constant] whether to output only constant structure scales
       #
+      # TODO: Fix or remove. Scales does not exist, unique_intervals_by_step is not delegated, and Analysis.new needs a scale
       def table_of_expanded_scales(constant: true)
         bag = Scales.new
         (0..count).each do |n|
@@ -126,6 +134,7 @@ module Tonal
 
       # TODO: Document
       #
+      # TODO: Fix or remove. Ratio#degree no longer exists (period_degrees?)
       def table_of_sequence_between(lower, upper, mod, irreducibles: true)
         rows = lower.upto(upper).map{|n| [n.ratio.inspect, n.ratio.step(mod).inspect, n.ratio.cent_diff(n.ratio.step(mod).ratio).inspect, n.ratio.degree]}.uniq{|r| r[0].to_r}.sort_by{|r| r[0].to_r}
         rows = rows.reject{|r| r[0].numerator <= lower} if irreducibles
@@ -133,11 +142,36 @@ module Tonal
       end
 
       # TODO: Document
+      # TODO: Fix or remove. ReducedRatio#degree no longer exists (period_degrees?)
       def table_of_mod_approximations(mod)
         rows = scale.ratios.map do |ratio|
           [ratio.inspect, ratio.step(mod).inspect, ratio.cent_diff(ratio.step(mod).ratio).inspect, ratio.degree]
         end
         Terminal::Table.new(headings: ["ratio", "step at mod", "cent diff with mod", "radial degree"], rows: rows)
+      end
+
+      NOTE_NAMES = %w[C C# D D# E F F# G G# A A# B]
+
+      # @return [Terminal::Table] text table of the 12-TET MIDI notes and pitch bends that retune them to the ratios of scale
+      # @example
+      #   puts TerminalTable.new(Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)).table_of_pitch_bends =>
+      #     +-------+------+------+--------------+---------------+---------------+
+      #     | ratio | note | MIDI | cents offset | bend (14-bit) | bend (signed) |
+      #     +-------+------+------+--------------+---------------+---------------+
+      #     | 1/1   | C4   | 60   | 0.0          | 8192          | 0             |
+      #     | 5/4   | E4   | 64   | -13.69       | 8169          | -23           |
+      #     | 3/2   | G4   | 67   | 1.96         | 8195          | 3             |
+      #     | 7/4   | A#4  | 70   | -31.17       | 8139          | -53           |
+      #     +-------+------+------+--------------+---------------+---------------+
+      #
+      # @param midi_root [Integer] MIDI number of the 1/1 of scale, default is middle C
+      # @param bend_range [Numeric] pitch bend range in semitones, matching the instrument (MPE default 48)
+      #
+      def table_of_pitch_bends(**kwargs)
+        rows = scale.to_pitch_bends(**kwargs).map do |ratio, midi, offset, bend, signed|
+          [ratio.inspect, note_name(midi), midi, offset, bend, signed]
+        end
+        Terminal::Table.new(headings: ["ratio", "note", "MIDI", "cents offset", "bend (14-bit)", "bend (signed)"], rows: rows)
       end
 
       # @return [Terminal::Table] text cross table. Notes of scale are on the margins.
@@ -175,6 +209,7 @@ module Tonal
       #     | 13/11 |  0 |  0 |  0 |  0 | -1 |  1 |  2 |
       #     ...
       #
+      # TODO: Fix or remove. Tonal::Interval#interval no longer exists
       def inventory
         unless @inventory_table
           occurs = Hash.new(0)
@@ -208,6 +243,7 @@ module Tonal
       # @params modulos a list of integers
       # @example
       #
+      # TODO: Fix or remove. Scale.tet resolves to the missing Tonal::IO::Scale (Tonal::Scale.edo?)
       def table_of_edo_approximations_for_modulos(*modulos)
         rows = [].tap do |rs|
           modulos.each do |m|
@@ -226,6 +262,14 @@ module Tonal
           end
         end
         Terminal::Table.new(headings: [[{value: "ED approximations of #{scale.name}", colspan: 5}, *(scale.to_r)],["Mod", "Mean(¢)", "SD(¢)", "Sum", "Var", {value: "¢ diff", colspan: count}]], rows: rows)
+      end
+
+      private
+      attr_reader :scale
+
+      # Middle C (MIDI 60) is C4, as in Logic Pro
+      def note_name(midi_number)
+        "#{NOTE_NAMES[midi_number % 12]}#{midi_number / 12 - 1}"
       end
     end
   end

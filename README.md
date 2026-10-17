@@ -58,6 +58,19 @@ scale.to_degrees  # => [0.0, 51.43, 102.86, 154.29, 205.71, 257.14, 308.57]
 scale.to_circle   # circular coordinates for visualization
 ```
 
+#### MPE pitch bend in Logic
+
+`to_pitch_bends` gives, for each ratio, the nearest 12-TET MIDI note and the pitch bend that retunes it: `[ratio, MIDI number, cents offset, 14-bit bend, signed bend]`. The bend range must match the instrument's (MPE member channels default to ±48 semitones).
+
+```ruby
+Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r).to_pitch_bends
+# => [[1/1, 60, 0.0, 8192, 0], [5/4, 64, -13.69, 8169, -23], [3/2, 67, 1.96, 8195, 3], [7/4, 70, -31.17, 8139, -53]]
+scale.to_pitch_bends(midi_root: 57, bend_range: 2)   # 1/1 on A3, ±2 semitone bend
+
+puts Tonal::IO::TerminalTable.new(Tonal::Scale.harmonic).table_of_pitch_bends
+# ratio | note | MIDI | cents offset | bend (14-bit) | bend (signed)
+```
+
 ### Tonal::Scale::IO
 
 Reads and writes scales in standard formats:
@@ -67,9 +80,12 @@ Tonal::Scale.from_scl("path/to/scale.scl")     # parse a Scala SCL file
 Tonal::Scale.from_scalarchive("wilson7")        # load from the Scala archive
 scale.to_scl("my-scale")                        # write to SCL file
 scale.to_kbm("my-scale")                        # write a Scala keyboard map
-Tonal::Scale.cps.to_musaic("hexany")            # write a musaic/1.0 program (CPS only) - block chords
+Tonal::Scale.cps.to_musaic("hexany")            # write a musaic/1.0 program - block chords
 Tonal::Scale.cps.to_musaic("hexany", form: :arpeggio)  # ...one tone at a time instead
+Tonal::Scale.diamond.chords(4..6).to_musaic("diamond")  # a chosen slice of a scale's chords
 ```
+
+`to_musaic` works for any scale whose `#chords` returns a `Tonal::Scale::ChordSet` — CPS, tonality diamond, and lattice. `scale.to_musaic(...)` exports the whole set (a diamond defaults to every nested sub-Ntad); call `to_musaic` on `scale.chords(...)` itself to write a narrower selection.
 
 ### CPS factor structure
 
@@ -82,7 +98,7 @@ scale.shared_factor_graph[0]                    # => [[1,[5]],[2,[7]],[4,[7]],[5
 scale.factor_walk                               # => [0,1,4,2,3,5]  — a degree ordering where every step shares a factor
 ```
 
-`to_musaic` builds on this: it emits the scale as a Just-Intonation `tuning`, and `Tonal::Scale::Cps#chords` as a matrix (block `chords`, or an `arpeggio` of single `notes`) that Musaic's `across_rows` transitions walk by shared tones — hence shared factors.
+`to_musaic` builds on this: it emits the scale as a Just-Intonation `tuning`, and its `#chords` as a matrix (block `chords`, or an `arpeggio` of single `notes`) that Musaic's `across_rows` transitions walk by shared tones — hence shared factors.
 
 ## Scale Types
 

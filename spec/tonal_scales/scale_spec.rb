@@ -424,6 +424,8 @@ RSpec.describe Tonal::Scale::Diamond do
   describe "#chords" do
     let(:diamond) { Tonal::Scale.diamond(1, 3, 5, 7) }
 
+    it { expect(diamond.chords).to be_a(Tonal::Scale::ChordSet) }
+    it { expect(diamond.chords.scale).to be(diamond) }
     it { expect(diamond.chords).to all(be_an_instance_of(Tonal::Scale::Chord)) }
     it { expect(diamond.chords).to all(satisfy { |chord| chord.steps.none?(&:nil?) }) }
 
@@ -463,8 +465,8 @@ RSpec.describe Tonal::Scale::Diamond do
       expect(Tonal::Scale.diamond(1, 3, 5, 7, 9, 11).chords.map(&:name).first).to eq "Otonal hexad, 1.3.5.7.9.11/1"
     end
 
-    it { expect(diamond.chords(1)).to eq [] }
-    it { expect(diamond.chords(5)).to eq [] }
+    it { expect(diamond.chords(1)).to be_empty }
+    it { expect(diamond.chords(5)).to be_empty }
 
     context "with a range - every nested sub-Ntad up to the limit, smallest first" do
       it { expect(diamond.chords(2..4).map(&:count)).to eq [2] * 8 + [3] * 8 + [4] * 8 }
@@ -507,6 +509,7 @@ RSpec.describe Tonal::Scale::Lattice do
   describe "#chords" do
     let(:full_lattice) { described_class.new(primes: [3, 5, 7, 11, 13], max_weight: 2) }
 
+    it { expect(full_lattice.chords).to be_a(Tonal::Scale::ChordSet) }
     it { expect(full_lattice.chords.count).to eq 40 }
     it { expect(full_lattice.chords).to all(be_an_instance_of(Tonal::Scale::Chord)) }
     it { expect(full_lattice.chords).to all(satisfy{|chord| chord.steps.none?(&:nil?)}) }
@@ -569,6 +572,8 @@ RSpec.describe Tonal::Scale::Cps do
   describe "#chords" do
     let(:eikosany) { Tonal::Scale.cps(1, 3, 5, 7, 9, 11, take: 3) }
 
+    it { expect(eikosany.chords).to be_a(Tonal::Scale::ChordSet) }
+    it { expect(eikosany.chords.scale).to be(eikosany) }
     it { expect(eikosany.chords).to all(be_an_instance_of(Tonal::Scale::Chord)) }
     it { expect(eikosany.chords).to all(satisfy{|chord| chord.steps.none?(&:nil?)}) }
     it { expect(eikosany.chords.count).to eq 30 }

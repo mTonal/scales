@@ -6,7 +6,7 @@ RSpec.describe Tonal::IO::Musaic do
 
   def writer(**overrides)
     described_class.new("hexany", **{
-      scale: hexany,
+      chords: hexany.chords,
       name: hexany.name,
       description: hexany.description,
       pitches: hexany.to_r.map(&:to_s),
@@ -103,9 +103,33 @@ RSpec.describe Tonal::IO::Musaic do
       expect(doc.dig("program", "tuning", "ratios").size).to eq 21
     end
 
-    it "raises for a non-CPS scale" do
+    it "raises for a scale without embedded chords" do
       expect { Tonal::Scale.edo(12).to_musaic("nope", location: Dir.mktmpdir) }
         .to raise_error(NotImplementedError)
+    end
+
+    describe "a tonality diamond" do
+      let(:diamond) { Tonal::Scale.diamond(1, 3, 5, 7) }
+
+      def diamond_doc(name, **opts)
+        dir = Dir.mktmpdir
+        diamond.to_musaic(name, location: dir, **opts)
+        YAML.load_file(Dir[File.join(dir, "**", "#{name}.yaml")].first)
+      end
+
+      it "defaults to every nested sub-Ntad (dyads through the full Ntad)" do
+        rows = diamond_doc("diamond7").dig("program", "tracks", 0, "regions", 0, "chords")
+        expect(rows.size).to eq diamond.chords(2..).count
+        expect(rows.flatten).to all(be_between(1, diamond.count))
+      end
+
+      it "names each otonal/utonal chord in the header legend" do
+        dir = Dir.mktmpdir
+        diamond.to_musaic("diamond7", location: dir)
+        output = File.read(Dir[File.join(dir, "**", "diamond7.yaml")].first)
+        expect(output).to match(/#   row 0  (Otonal|Utonal) \w+, /)
+        expect(output).to include("(1)/(1)")
+      end
     end
   end
 end
