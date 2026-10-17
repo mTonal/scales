@@ -11,6 +11,33 @@ module Tonal
           /\d+\/\d+/
         end
 
+        # @return [Integer] byte count of data written for the scale by this kind of writer (Scl, Kbm, Musaic, ...)
+        #
+        # @example
+        #   Tonal::IO::Scl.export(Tonal::Scale.edo(12), "12-edo") => 440
+        #
+        # @param scale [Tonal::Scale] the scale to write
+        # @param file_name [String] file name, default is the name of the scale
+        # @param fave [Boolean] whether to place in the "faves" sub-folder
+        # @param location [String] to write file to, default is the root directory of this kind of file
+        # @param options writer-specific keyword arguments (e.g. chords: for Musaic)
+        #
+        def export(scale, file_name=nil, fave: false, location: nil, **options)
+          new(file_name || scale.name,
+            name: scale.name,
+            description: scale.description,
+            pitches: scale.to_r.map(&:to_s),
+            location: export_location(scale, fave:, location:),
+            **options
+          ).write
+        end
+
+        private
+        def export_location(scale, fave:, location:)
+          fave_location = fave ? faves_directory : ""
+          Pathname.new(location || root_directory).join(fave_location, scale.count.to_s)
+        end
+
         protected
         def parse(input)
           Tonal::Scale.new.tap do |scale|
@@ -23,7 +50,7 @@ module Tonal
         end
       end
 
-      def initialize(file_name, name:, description:, pitches:, location: Tonal::IO.home_directory.join(self.class.root_directory))
+      def initialize(file_name, name:, description:, pitches:, location: self.class.root_directory)
         @file_name = Pathname.new(sanitized(file_name)).sub_ext(self.class.file_extension)
         @name = name
         @description = description

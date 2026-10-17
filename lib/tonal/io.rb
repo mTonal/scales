@@ -12,26 +12,18 @@ class Tonal::Scale
     # @param fave [Boolean] whether to place in the "faves" sub-folder of the SCL folder.  If true, will write to "faves" sub-folder of SCL folder.  If false, will write to root directory of SCL folder.  Ignored if location is not nil.
     #
     def to_scl(file_name=nil, fave: false, location: nil)
-      fave_location = fave ? Tonal::IO::Scl.faves_directory : ""
-      location = location.nil? ? Tonal::IO::Scl.root_directory.join(fave_location, count.to_s) : Pathname.new("").join(location, fave_location, count.to_s)
-      Tonal::IO::Scl.new(file_name || self.name,
-        name: self.name,
-        description: self.description,
-        pitches: self.to_r.map(&:to_s),
-        location: location
-      ).write
+      Tonal::IO::Scl.export(self, file_name, fave:, location:)
     end
     alias :write :to_scl
 
+    # @return [Integer] byte count of data written to KBM file
+    # @example
+    #   Tonal::Scale.edo(12).to_kbm("12-edo")
+    #
+    # @see #to_scl for the parameters
+    #
     def to_kbm(file_name=nil, fave: false, location: nil)
-      fave_location = fave ? Tonal::IO::Kbm.faves_directory : ""
-      location = location.nil? ? Tonal::IO::Kbm.root_directory.join(fave_location, count.to_s) : Pathname.new("").join(location, fave_location, count.to_s)
-      Tonal::IO::Kbm.new(file_name || self.name,
-        name: self.name,
-        description: self.description,
-        pitches: self.to_r.map(&:to_s),
-        location: location
-      ).write
+      Tonal::IO::Kbm.export(self, file_name, fave:, location:)
     end
 
     def self.included(base)

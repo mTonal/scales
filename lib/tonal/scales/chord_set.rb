@@ -55,18 +55,6 @@ class Tonal::Scale::ChordSet
   def to_musaic(file_name = nil, fave: false, location: nil, base_midi: 60, tempo: nil, form: :chords, durations: nil)
     raise ArgumentError, "no chords to export" if @chords.empty?
 
-    fave_location = fave ? Tonal::IO::Musaic.faves_directory : ""
-    location = location.nil? ? Tonal::IO::Musaic.root_directory.join(fave_location, scale.count.to_s) : Pathname.new("").join(location, fave_location, scale.count.to_s)
-    Tonal::IO::Musaic.new(file_name || scale.name,
-      name: scale.name,
-      description: scale.description,
-      pitches: scale.to_r.map(&:to_s),
-      location: location,
-      chords: @chords,
-      base_midi: base_midi,
-      tempo: tempo,
-      form: form,
-      durations: durations
-    ).write
+    Tonal::IO::Musaic.export(scale, file_name, fave:, location:, chords: @chords, base_midi:, tempo:, form:, durations:)
   end
 end
