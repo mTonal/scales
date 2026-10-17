@@ -7,6 +7,14 @@ RSpec.describe Tonal::Scale::Mappers do
     it "returns the cents values of the notes of the scale" do
       expect(described_class.new(scale).to_cents).to eq [0.0, 171.43, 342.86, 514.29, 685.71, 857.14, 1028.57]
     end
+
+    context "with from_base: true" do
+      let(:scale) { Tonal::Scale.new(5/4r, 3/2r, 15/8r) }
+
+      it "returns the cents of the notes measured up from the first note" do
+        expect(described_class.new(scale).to_cents(from_base: true)).to eq [0.0, 315.64, 701.96]
+      end
+    end
   end
 
   describe "#to_log2" do

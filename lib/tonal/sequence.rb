@@ -54,8 +54,7 @@ class Tonal::Sequence
   # @param [Scale] being compared to self
   #
   def ==(rhs)
-    false unless rhs.kind_of?(Tonal::Sequence) && self.count != rhs.count
-    to_r == rhs.to_r
+    rhs.kind_of?(Tonal::Sequence) && to_r == rhs.to_r
   end
 
   private

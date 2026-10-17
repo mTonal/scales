@@ -43,7 +43,6 @@ class Tonal::Scale
                             :to_radians, :to_degrees, :to_circle, :negatives,
                             :nearest_small_ratios, :adjusted_standard_tuning_frequency #, :best_fitting_edo
 
-  def_delegators :@reporter, :test
   def_delegators :@sequence, :sequence
 
   include Tonal::Scale::IO
@@ -82,7 +81,6 @@ class Tonal::Scale
     @description = kwargs[:description]
     @analysis = Analysis.new(self)
     @mappers = Mappers.new(self)
-    @reporter = nil
   end
 
   alias :modulo :count
@@ -453,8 +451,7 @@ class Tonal::Scale
   # @param [Tonal::Scale] being compared to self
   #
   def ==(rhs)
-    false unless rhs.kind_of?(Tonal::Scale) && self.count != rhs.count
-    to_r == rhs.to_r
+    rhs.kind_of?(Tonal::Scale) && to_r == rhs.to_r
   end
 
   # Set uses Hash as storage and equality of elements is determined according to Object#eql? and Object#hash.
@@ -463,10 +460,10 @@ class Tonal::Scale
      other.instance_of?(self.class) && to_a == other.to_a
   end
 
+  # Consistent with #eql?: same class and same ratios. Hashes the Rationals, since Tonal::Ratio#hash is constant.
+  #
   def hash
-     p, q = 17, 37
-     p = q * @id.hash
-     p = q * @name.hash
+    [self.class, to_r].hash
   end
 
   private

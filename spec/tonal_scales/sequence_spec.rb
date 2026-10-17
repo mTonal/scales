@@ -13,6 +13,15 @@ RSpec.describe Tonal::Sequence do
     end
   end
 
+  describe "#==" do
+    let(:sequence) { described_class.new(2/1r, 3/2r) }
+
+    it { expect(sequence == described_class.new(2/1r, 3/2r)).to be true }
+    it { expect(sequence == described_class.new(2/1r)).to be false }
+    it { expect(sequence == Object.new).to be false }
+    it { expect(sequence == nil).to be false }
+  end
+
   describe "class methods" do
     #describe ".denominize" do
     #  let(:ratios) { [5/4r, 7/4r, 15/8r] }

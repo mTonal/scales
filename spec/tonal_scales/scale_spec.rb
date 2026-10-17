@@ -240,6 +240,31 @@ RSpec.describe Tonal::Scale do
     end
   end
 
+  describe "#==" do
+    let(:scale) { described_class.new(1/1r, 5/4r, 3/2r) }
+
+    it { expect(scale == described_class.new(1/1r, 5/4r, 3/2r)).to be true }
+    it { expect(scale == described_class.new(1/1r, 5/4r)).to be false }
+    it { expect(scale == Object.new).to be false }
+    it { expect(scale == nil).to be false }
+  end
+
+  describe "#hash" do
+    it "is equal for eql? scales" do
+      expect(described_class.new(1/1r, 5/4r).hash).to eq described_class.new(1/1r, 5/4r).hash
+    end
+
+    it "differs for scales of different ratios" do
+      expect(described_class.new(1/1r, 5/4r).hash).not_to eq described_class.new(1/1r, 3/2r).hash
+    end
+  end
+
+  describe "#test" do
+    it "is not a public method of a scale" do
+      expect(described_class.new(1/1r)).not_to respond_to(:test)
+    end
+  end
+
   describe "#delete" do
     let(:ratios) { [1/1r, 5/4r, 3/2r, 7/4r] }
     let(:scale) { described_class.new(ratios) }

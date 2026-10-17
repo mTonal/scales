@@ -20,9 +20,7 @@ class Tonal::Scale::Mappers
     if first == Tonal::ReducedRatio.identity or not from_base
       to_log2.map{|l| l.to_cents(precision: precision) }
     else
-      self.class.new.tap do |scale|
-        ratios.each{|ratio| scale << (first / ratio)}
-      end.to_cents
+      Tonal::Scale.new(*ratios.map{|ratio| ratio / first}).to_cents(precision: precision)
     end
   end
 
