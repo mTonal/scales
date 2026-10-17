@@ -52,7 +52,7 @@ class Tonal::Scale
   DEFAULT_EQUAVE = 2/1r
 
   attr_reader :equave
-  attr_accessor :name, :description
+  attr_writer :name, :description
 
   # @return [Tonal::Scale]
   #
@@ -78,8 +78,8 @@ class Tonal::Scale
     @scale = SortedSet.new(sequence.map{|term| Tonal::ReducedRatio.new(term.numerator, term.denominator)})
     @scale << Tonal::ReducedRatio.new(1/1r) if @args[:include_equave]
     label_ratios!
-    @name = kwargs[:name] || "Unamed"
-    @description = kwargs[:description] || "Undescribed"
+    @name = kwargs[:name]
+    @description = kwargs[:description]
     @analysis = Analysis.new(self)
     @mappers = Mappers.new(self)
     @reporter = nil
@@ -87,6 +87,25 @@ class Tonal::Scale
 
   alias :modulo :count
   alias :ratios :entries
+
+  # @return [String] the assigned name of self, or the default name of its kind of scale
+  #
+  # @example
+  #   Tonal::Scale.harmonic.name => "Harmonic sequence, 8..16, nexus: 1"
+  #   Tonal::Scale.harmonic.tap{|s| s.name = "Otonality"}.name => "Otonality"
+  #
+  def name
+    @name || default_name
+  end
+
+  # @return [String] the assigned description of self, or the default description of its kind of scale
+  #
+  # @example
+  #   Tonal::Scale.edo(12).description => "12-tone equal division of the octave scale"
+  #
+  def description
+    @description || default_description
+  end
 
   # @return [Tonal::Scale] branching scale of self
   #
@@ -457,6 +476,16 @@ class Tonal::Scale
 
   def init_sequence(*collection, **kwargs)
     nil
+  end
+
+  # Name and description used when none is assigned. Overridden by sub-classes to describe how they were generated.
+  #
+  def default_name
+    "Unamed"
+  end
+
+  def default_description
+    "Undescribed"
   end
 
   # Make the labels of complex ratios prettier for presentations. Called by sub-classes as needed.

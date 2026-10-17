@@ -3,11 +3,11 @@ class Tonal::Scale::Harmonic < Tonal::Scale
     Tonal::Sequence::Harmonic.new(indices: @args[:indices], nexus: @args[:nexus])
   end
 
-  def name
+  def default_name
     "Harmonic sequence, #{@args[:indices]}, nexus: #{@args[:nexus]}"
   end
 
-  def description
+  def default_description
     "Harmonic sequence, indices: #{@args[:indices]}, nexus: #{@args[:nexus]}"
   end
 end

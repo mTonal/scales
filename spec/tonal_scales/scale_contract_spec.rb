@@ -51,6 +51,28 @@ RSpec.shared_examples "a Tonal::Scale" do
       expect(result.to_a).to eq scale_of(subject.to_r + other.to_r).to_a
     end
   end
+
+  describe "#name" do
+    it "has a default name" do
+      expect(subject.name).to be_a(String).and(satisfy { |name| !name.empty? })
+    end
+
+    it "returns the assigned name" do
+      subject.name = "Assigned name"
+      expect(subject.name).to eq "Assigned name"
+    end
+  end
+
+  describe "#description" do
+    it "has a default description" do
+      expect(subject.description).to be_a(String).and(satisfy { |description| !description.empty? })
+    end
+
+    it "returns the assigned description" do
+      subject.description = "Assigned description"
+      expect(subject.description).to eq "Assigned description"
+    end
+  end
 end
 
 RSpec.describe "Tonal::Scale contract" do

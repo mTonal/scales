@@ -3,11 +3,11 @@ class Tonal::Scale::Polyharmonic < Tonal::Scale
     Tonal::Sequence::Polyharmonic.new(indices: @args[:indices], fundamentals: @args[:fundamentals])
   end
 
-  def name
+  def default_name
     "Polyharmonic sequence, #{@args[:indices]}, #{@args[:fundamentals]}"
   end
 
-  def description
+  def default_description
     "Polyharmonic sequence, indices: #{@args[:indices]}, fundamentals: #{@args[:fundamentals]}"
   end
 end

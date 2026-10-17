@@ -7,11 +7,11 @@ class Tonal::Scale::Cps < Tonal::Scale
     Tonal::Sequence::Cps.new(set: assigned_set, take: assigned_take)
   end
 
-  def name
+  def default_name
     "CPS, #{assigned_set}"
   end
 
-  def description
+  def default_description
     "Cross Product Set: #{prettified_set}, take: #{assigned_take} - #{self.labels.join(', ')}"
   end
 

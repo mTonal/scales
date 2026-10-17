@@ -3,11 +3,11 @@ class Tonal::Scale::Afs < Tonal::Scale
     Tonal::Sequence::Afs.new(indices: @args[:indices], factor: @args[:factor], offset: @args[:offset], nexus: @args[:nexus], identity: @args[:identity])
   end
 
-  def name
+  def default_name
     "AFS, indices: #{@args[:indices]}, factor: #{@args[:factor]}, offset: #{@args[:offset]}, nexus: #{@args[:nexus]}, identity: #{@args[:identity]}"
   end
 
-  def description
+  def default_description
     "Arithmetic Frequency Sequence: indices: #{@args[:indices]}, factor: #{@args[:factor]}, offset: #{@args[:offset]}, nexus: #{@args[:nexus]}, identity: #{@args[:identity]}"
   end
 end

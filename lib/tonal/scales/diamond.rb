@@ -9,11 +9,11 @@ class Tonal::Scale::Diamond < Tonal::Scale
     Tonal::Sequence::Diamond.new(set: assigned_set)
   end
 
-  def name
+  def default_name
     "Tonality diamond, #{assigned_set}"
   end
 
-  def description
+  def default_description
     "Tonality diamond: all ratios p/q for p, q in #{assigned_set}, reduced to the octave"
   end
 

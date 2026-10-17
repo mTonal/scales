@@ -3,11 +3,11 @@ class Tonal::Scale::Asymptotic < Tonal::Scale
     Tonal::Sequence::Asymptotic.new(start: @args[:start], number: @args[:number], limit: @args[:limit])
   end
 
-  def name
+  def default_name
     "Asymptotic scale, #{@args[:start]}, #{@args[:number]}, #{@args[:limit]}"
   end
 
-  def description
-    @description = "Asymptotic scale, start: #{@args[:start]}, number: #{@args[:number]}, limit: #{@args[:limit]}"
+  def default_description
+    "Asymptotic scale, start: #{@args[:start]}, number: #{@args[:number]}, limit: #{@args[:limit]}"
   end
 end

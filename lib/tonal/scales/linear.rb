@@ -3,7 +3,7 @@ class Tonal::Scale::Linear < Tonal::Scale
     Tonal::Sequence::Linear.new(generator: @args[:generator], upto: @args[:upto], limit: @args[:limit], equave: @args[:equave], threshold: @args[:threshold], schizma: @args[:schizma], by_threshold: @args[:by_threshold], centered: @args[:centered])
   end
 
-  def name
+  def default_name
     if @args[:by_threshold]
       "Linear scale, generator: #{@args[:generator]}, error: #{@args[:threshold]} cents"
     else
@@ -11,7 +11,7 @@ class Tonal::Scale::Linear < Tonal::Scale
     end
   end
 
-  def description
+  def default_description
     if @args[:by_threshold]
       "Linear scale, generator: #{@args[:generator]}, error: #{@args[:threshold]} cents"
     else

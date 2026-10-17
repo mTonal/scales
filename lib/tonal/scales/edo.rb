@@ -10,11 +10,11 @@ class Tonal::Scale::Edo < Tonal::Scale
     end
   end
 
-  def name
+  def default_name
     "#{@args[:modulo]} edo"
   end
 
-  def description
+  def default_description
     "#{@args[:modulo]}-tone equal division of the octave scale"
   end
 

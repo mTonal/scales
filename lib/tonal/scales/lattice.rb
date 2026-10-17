@@ -3,11 +3,11 @@ class Tonal::Scale::Lattice < Tonal::Scale
     Tonal::Sequence::Lattice.new(primes: @args[:primes], max_weight: @args[:max_weight])
   end
 
-  def name
+  def default_name
     "Lattice, #{@args[:primes]}, max_weight: #{@args[:max_weight]}"
   end
 
-  def description
+  def default_description
     "Euler-Fokker/Wilson lattice: #{@args[:primes]} as independent bidirectional axes, up to #{@args[:max_weight]} simultaneously active"
   end
 
