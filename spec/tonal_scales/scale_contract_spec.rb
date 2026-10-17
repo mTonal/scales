@@ -1,0 +1,84 @@
+require "spec_helper"
+
+# The behaviour every Tonal::Scale must honour, whatever subclass it is.
+# Run against each constructor so a subclass can't quietly break an inherited method.
+#
+RSpec.shared_examples "a Tonal::Scale" do
+  let(:factor) { 3/2r }
+  let(:other) { Tonal::Scale.new(7/6r) }
+
+  def scale_of(ratios) = Tonal::Scale.new(*ratios)
+
+  describe "#*" do
+    it "returns a Tonal::Scale of the ratios multiplied by a factor" do
+      result = subject * factor
+      expect(result).to be_instance_of Tonal::Scale
+      expect(result.to_a).to eq scale_of(subject.to_r.map { |r| r * factor }).to_a
+    end
+
+    it "returns the same scale with the factor on the left-hand side" do
+      expect((factor * subject).to_a).to eq (subject * factor).to_a
+    end
+
+    it "returns a Tonal::Scale of the cross-product with another scale" do
+      rhs = Tonal::Scale.new(1/1r, 3/2r)
+      result = subject * rhs
+      expect(result).to be_instance_of Tonal::Scale
+      expect(result.to_a).to eq scale_of(subject.to_r.product(rhs.to_r).map { |a, b| a * b }).to_a
+    end
+  end
+
+  describe "#/" do
+    it "returns a Tonal::Scale of the ratios divided by a factor" do
+      result = subject / factor
+      expect(result).to be_instance_of Tonal::Scale
+      expect(result.to_a).to eq scale_of(subject.to_r.map { |r| r / factor }).to_a
+    end
+  end
+
+  describe "#**" do
+    it "returns a Tonal::Scale of the ratios raised to a power" do
+      result = subject ** 2
+      expect(result).to be_instance_of Tonal::Scale
+      expect(result.to_a).to eq scale_of(subject.to_r.map { |r| r ** 2 }).to_a
+    end
+  end
+
+  describe "#+" do
+    it "returns a Tonal::Scale joining the ratios of both scales" do
+      result = subject + other
+      expect(result).to be_instance_of Tonal::Scale
+      expect(result.to_a).to eq scale_of(subject.to_r + other.to_r).to_a
+    end
+  end
+end
+
+RSpec.describe "Tonal::Scale contract" do
+  {
+    "Tonal::Scale.new" => -> { Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r) },
+    "afs" => -> { Tonal::Scale.afs },
+    "arithmetic" => -> { Tonal::Scale.arithmetic },
+    "asymptotic" => -> { Tonal::Scale.asymptotic },
+    "branching" => -> { Tonal::Scale.branching },
+    "convolved_proportional" => -> { Tonal::Scale.convolved_proportional(5/4r, 3/2r) },
+    "cps" => -> { Tonal::Scale.cps },
+    "diamond" => -> { Tonal::Scale.diamond },
+    "edo" => -> { Tonal::Scale.edo(12) },
+    "genus" => -> { Tonal::Scale.genus },
+    "harmonic" => -> { Tonal::Scale.harmonic },
+    "intra_proportional" => -> { Tonal::Scale.intra_proportional(5/4r, 3/2r) },
+    "lattice" => -> { Tonal::Scale.lattice },
+    "linear" => -> { Tonal::Scale.linear },
+    "polyharmonic" => -> { Tonal::Scale.polyharmonic },
+    "proportional" => -> { Tonal::Scale.proportional(5/4r, 3/2r) },
+    "recurrence" => -> { Tonal::Scale.recurrence },
+    "subharmonic" => -> { Tonal::Scale.subharmonic },
+    "superparticular" => -> { Tonal::Scale.superparticular },
+    "superpartient" => -> { Tonal::Scale.superpartient }
+  }.each do |constructor, build|
+    context constructor do
+      subject { build.call }
+      it_behaves_like "a Tonal::Scale"
+    end
+  end
+end

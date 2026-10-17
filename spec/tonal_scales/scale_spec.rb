@@ -203,6 +203,12 @@ RSpec.describe Tonal::Scale do
         expect(factor * scale).to eq described_class.new(1/1r, 7/6r, 4/3r, 5/3r)
       end
     end
+
+    context "with a scale on the right-hand side" do
+      it "returns the cross-product of the two scales" do
+        expect((described_class.new(1/1r, 5/4r) * described_class.new(1/1r, 3/2r)).to_a).to eq [1/1r, 5/4r, 3/2r, 15/8r]
+      end
+    end
   end
 
   describe "#/" do

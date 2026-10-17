@@ -4,10 +4,10 @@ class Tonal::Scale::Recurrence < Tonal::Scale
   end
 
   def name
-    "Recurrence #{@ratios.count}-tone, #{@args[:seeds]}, #{@args[:indices]}, #{@args[:coeff]}, #{@args[:start_at]}"
+    "Recurrence #{count}-tone, #{@args[:seeds]}, #{@args[:indices]}, #{@args[:coeff]}, #{@args[:start_at]}"
   end
 
   def description
-    "Recurrence #{@ratios.count}-tone, seeds: #{@args[:seeds]}, indices: #{@args[:indices]}, coefficients: #{@args[:coeff]}, start_at: #{@args[:start_at]}"
+    "Recurrence #{count}-tone, seeds: #{@args[:seeds]}, indices: #{@args[:indices]}, coefficients: #{@args[:coeff]}, start_at: #{@args[:start_at]}"
   end
 end

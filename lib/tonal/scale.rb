@@ -389,15 +389,15 @@ class Tonal::Scale
   #
   # @example
   #   Tonal::Scale.new(1/1r, 5/4r, 3/2r) * (3/2r) => [(3/2), (15/8), (9/8)]
-  #   Tonal::Scale.new(1/1r, 5/4r) * Tonal::Scale.new(1/1r, 3/2r) => cross-product scale
+  #   Tonal::Scale.new(1/1r, 5/4r) * Tonal::Scale.new(1/1r, 3/2r) => [(1/1), (5/4), (3/2), (15/8)]
   #
   # @param rhs [Tonal::Scale, Rational, Numeric] the scale or scalar to multiply against self
   #
   def *(rhs)
     if rhs.is_a?(Tonal::Scale)
-      return self.class.new(*(scale.each{|r1| rhs.collect{|r2| r1.to_r * r2.to_r}}.flatten))
+      return Tonal::Scale.new(*scale.flat_map{|r1| rhs.collect{|r2| r1.to_r * r2.to_r}})
     else
-      return self.class.new(*scale.collect{|r| r.to_r * (rhs)})
+      return Tonal::Scale.new(*scale.collect{|r| r.to_r * (rhs)})
     end
   end
 
@@ -409,11 +409,11 @@ class Tonal::Scale
   # @param rhs [Rational, Numeric] the scalar to divide each ratio by
   #
   def /(rhs)
-    self.class.new(*scale.collect{|r| r.to_r / (rhs)})
+    Tonal::Scale.new(*scale.collect{|r| r.to_r / (rhs)})
   end
 
   def **(power)
-    self.class.new(*scale.collect{|r| r.to_r ** power})
+    Tonal::Scale.new(*scale.collect{|r| r.to_r ** power})
   end
 
   # @return [Tonal::Scale] new scale combining the ratios of self and rhs
@@ -424,7 +424,7 @@ class Tonal::Scale
   # @param rhs [Tonal::Scale] the scale whose ratios are joined with self
   #
   def +(rhs)
-    self.class.new(*(entries+rhs.entries), name: "#{name} + #{rhs.name}", description: "#{description} + #{rhs.description}")
+    Tonal::Scale.new(*(entries+rhs.entries), name: "#{name} + #{rhs.name}", description: "#{description} + #{rhs.description}")
   end
   alias :join :+
 
