@@ -1,19 +1,16 @@
-class Tonal::Scale::Mappers
-  extend Forwardable
-
-  def_delegators :@scale, :count, :length, :ratios, :first, :modulo, :ratio_best_expressing
+# A scale's ratios expressed in other units: cents, log2, floats, MIDI, pitch bends, angles.
+# These are the scale's to_* methods, delegated from Tonal::Scale.
+#
+class Tonal::Scale::Conversions < Tonal::Scale::Service
+  def_delegators :@scale, :count, :ratios, :first
 
   PITCH_BEND_CENTER = 8192
   PITCH_BEND_MAX = 16383
   MPE_BEND_RANGE = 48
 
-  def initialize(scale=nil)
-    @scale = scale
-  end
-
   # @return [Array] array of [Tonal::Cents] values of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_cents
+  #   Tonal::Scale.edo(7).to_cents
   #   => [0.0, 171.43, 342.86, 514.29, 685.71, 857.14, 1028.57]
   #
   def to_cents(precision: Tonal::Cents::PRECISION, from_base: false)
@@ -26,7 +23,7 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of [Tonal::Log2] values of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_log2
+  #   Tonal::Scale.edo(7).to_log2
   #   => [0.0, 0.14, 0.29, 0.43, 0.57, 0.71, 0.86]
   #
   def to_log2
@@ -36,7 +33,7 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of Floats of the ratios of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_f
+  #   Tonal::Scale.edo(7).to_f
   #   => [1.0, 1.1, 1.22, 1.35, 1.49, 1.64, 1.81]
   #
   def to_f(round: 2)
@@ -45,7 +42,7 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of Rationals of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_r
+  #   Tonal::Scale.edo(7).to_r
   #   => [(1/1), (4972377122365053/4503599627370496), (2744974719417411/2251799813685248), (3030697803008479/2251799813685248), (3346161663415923/2251799813685248), (7388924007269683/4503599627370496), (2039508378439785/1125899906842624)]
   #
   def to_r
@@ -54,13 +51,13 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of Integers representing MIDI numbers of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_midi
+  #   Tonal::Scale.edo(7).to_midi
   #   => [60, 61, 62, 63, 64, 65, 66]
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_midi(values_only: false)
+  #   Tonal::Scale.edo(7).to_midi(values_only: false)
   #   => [60 MIDI, 61 MIDI, 62 MIDI, 63 MIDI, 64 MIDI, 65 MIDI, 66 MIDI]
   #
   def to_midi(modulo=count, midi_root: Tonal::Midi::Note::C4_MIDI_NUMBER, values_only: true)
-    @scale.steps(modulo).map{|step| step.step_to_midi(midi_root: midi_root)}.map do |midi_number|
+    scale.approximations.steps(modulo).map{|step| step.step_to_midi(midi_root: midi_root)}.map do |midi_number|
       values_only ? midi_number.value : midi_number
     end
   end
@@ -69,9 +66,9 @@ class Tonal::Scale::Mappers
   #   The MIDI number is the nearest 12-TET note; the pitch bend retunes it to the ratio.
   # @note bend_range must match the pitch bend range of the receiving instrument (MPE member channels default to 48 semitones)
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r)).to_pitch_bends
+  #   Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r).to_pitch_bends
   #   => [[1/1, 60, 0.0, 8192, 0], [5/4, 64, -13.69, 8169, -23], [3/2, 67, 1.96, 8195, 3], [7/4, 70, -31.17, 8139, -53]]
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.new(1/1r, 5/4r)).to_pitch_bends(bend_range: 2)
+  #   Tonal::Scale.new(1/1r, 5/4r).to_pitch_bends(bend_range: 2)
   #   => [[1/1, 60, 0.0, 8192, 0], [5/4, 64, -13.69, 7631, -561]]
   #
   # @param midi_root [Integer] MIDI number of the 1/1 of self, default is middle C
@@ -88,7 +85,7 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of Floats representing radians of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_radians
+  #   Tonal::Scale.edo(7).to_radians
   #   => [0.0, 0.9, 1.8, 2.69, 3.59, 4.49, 5.39]
   #
   def to_radians
@@ -98,7 +95,7 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of Floats representing degrees of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_degrees
+  #   Tonal::Scale.edo(7).to_degrees
   #   => [0.0, 51.43, 102.86, 154.29, 205.71, 257.14, 308.57]
   #
   def to_degrees
@@ -108,7 +105,7 @@ class Tonal::Scale::Mappers
 
   # @return [Array] of Floats pairs representing circle coordinates of self
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(7)).to_circle
+  #   Tonal::Scale.edo(7).to_circle
   #   => [[-6.123233995736766e-17, 1.0],[0.7833269096274833, 0.6216099682706646],..,[-0.9753733187046665, -0.22056039798441862],[-0.7790726726314032, 0.6269336254811688]]
   #
   def to_circle
@@ -120,7 +117,7 @@ class Tonal::Scale::Mappers
   # @return [Float] the frequency in self nearest to standard tuning, adjusted from the reference (root) frequency
   #
   # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.harmonic).adjusted_standard_tuning_frequency
+  #   Tonal::Scale.harmonic.adjusted_standard_tuning_frequency
   #   # standard_tuning_frequency: 440.0 Hz, reference_frequency: 261.63 Hz (middle C)
   #
   # @param standard_tuning_frequency [Float] the target tuning reference, default 440.0 Hz (concert A)
@@ -130,43 +127,7 @@ class Tonal::Scale::Mappers
     while(reference_frequency < standard_tuning_frequency) do
       reference_frequency *= 2
     end
-    reference_frequency * ratio_best_expressing((standard_tuning_frequency/reference_frequency).to_reduced_ratio.to_f).to_f / 2.0
-  end
-
-  # @return [Array<Tonal::Step>] the step positions of the Levy-negative of each ratio in the scale
-  #
-  # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.harmonic).negatives
-  #   => [0\8, 7\8, 6\8, 5\8, 4\8, 3\8, 2\8, 1\8]
-  #
-  def negatives
-    ratios.map(&:negative).map{|r| r.step(modulo)}
-  end
-
-  # @return [Array<Tonal::ReducedRatio>] the lowest-complexity approximation of each ratio in self
-  #
-  # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.edo(12)).nearest_small_ratios
-  #   => [1/1, 16/15, 9/8, 6/5, 5/4, 4/3, 7/5, 3/2, 8/5, 5/3, 7/4, 15/8]
-  #
-  # @param sort_by [Symbol] complexity measure used to rank approximations; one of :benedetti, :wilson, :tenney, :log_weil, :weil
-  #
-  def nearest_small_ratios(sort_by: :benedetti)
-    sort_by = :benedetti unless Tonal::Scale::Analysis::ACCEPTED_MEASURES.include?(sort_by)
-    sort_by = "#{sort_by}_height".to_sym
-    ratios.map{|r| r.approximate.by_continued_fraction.sort_by(&sort_by).ratios.first}
-  end
-
-  # @return [Array] of [ratio, step, nearest-hundredth cents, nearest-hundredth-cent difference] tuples for each ratio of self
-  #
-  # @example
-  #   Tonal::Scale::Mappers.new(Tonal::Scale.harmonic).maps_on
-  #   => [[1/1, 0\8, 0.0, 0.0], [9/8, 1\8, 200.0, 3.91], ...]
-  #
-  # @param step [Integer] modulo used to compute step numbers, defaults to scale count
-  #
-  def maps_on(step=modulo)
-    ratios.map{|r| [r, r.step(step), r.to_cents.nearest_hundredth.value, r.to_cents.nearest_hundredth_difference.value]}
+    reference_frequency * scale.approximations.ratio_best_expressing((standard_tuning_frequency/reference_frequency).to_reduced_ratio.to_f).to_f / 2.0
   end
 
   private

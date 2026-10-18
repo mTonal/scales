@@ -460,7 +460,7 @@ class Tonal::Scale
      other.instance_of?(self.class) && to_a == other.to_a
   end
 
-  # Consistent with #eql?: same class and same ratios. Hashes the Rationals, since Tonal::Ratio#hash is constant.
+  # Consistent with #eql?: same class and same ratios.
   #
   def hash
     [self.class, to_r].hash
