@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe Tonal::Scale::Mappers do
+RSpec.describe Tonal::Scale::Conversions do
   let(:scale) { Tonal::Scale.edo(7) }
 
   describe "#to_cents" do

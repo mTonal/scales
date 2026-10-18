@@ -50,19 +50,21 @@ class Tonal::Scale::Reporter < Tonal::Scale::Service
 
   # @return [Terminal::Table] text table inventory of the intervals between the notes of scale.
   #   The columns are the interval, its prime vector exponents, its difference (antecedent - consequent) and how often it occurs.
+  #   Intervals with a prime factor above Tonal::Ratio::PRIME_LIMIT, such as EDO steps, have blank exponents.
   # @example
   #   puts Tonal::Scale.new(1/1r, 5/4r, 3/2r).report.inventory =>
   #     +----------+----+---+---+------------+-------------+
   #     | interval | 2  | 3 | 5 | difference | occurrences |
   #     +----------+----+---+---+------------+-------------+
-  #     |   6/5    | -1 | 1 | 0 |          1 |           1 |
+  #     |   6/5    |  1 | 1 | -1 |          1 |           1 |
   #     ...
   #
   def inventory
     intervals = scale.structure.occurrences.reject{|ratio, _| ratio == 1}.map{|_, found| [found.first.intervalic_ratio, found.count]}
-    primes = Prime.each(intervals.map{|interval, _| interval.max_prime}.max || 2).to_a
+    primes = Prime.each(intervals.filter_map{|interval, _| interval.max_prime}.max || 2).to_a
     rows = intervals.map do |interval, occurrences|
-      [interval.to_r, *interval.prime_vector.to_a.rpad(primes.count, 0), interval.difference, occurrences]
+      exponents = interval.prime_vector&.to_a&.rpad(primes.count, 0) || Array.new(primes.count)
+      [interval.to_r, *exponents, interval.difference, occurrences]
     end
     Terminal::Table.new(headings: ["interval", *primes, "difference", "occurrences"], rows: rows).tap do |table|
       table.align_column(0, :center)

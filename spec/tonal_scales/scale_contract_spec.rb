@@ -74,6 +74,24 @@ RSpec.shared_examples "a Tonal::Scale" do
     end
   end
 
+  describe "area accessors" do
+    {
+      structure: Tonal::Scale::Structure,
+      primes: Tonal::Scale::Primes,
+      approximations: Tonal::Scale::Approximations,
+      efficiency: Tonal::Scale::Efficiency,
+      report: Tonal::Scale::Reporter
+    }.each do |accessor, service|
+      it "##{accessor} returns a #{service} of the scale" do
+        expect(subject.public_send(accessor)).to be_instance_of(service).and(have_attributes(scale: subject))
+      end
+    end
+
+    it "renders a pitch bend report" do
+      expect(subject.report.pitch_bends.rows.count).to eq subject.count
+    end
+  end
+
   describe "#to_musaic" do
     it "is offered only by scales that have chords" do
       expect(subject.respond_to?(:to_musaic)).to eq subject.respond_to?(:chords)

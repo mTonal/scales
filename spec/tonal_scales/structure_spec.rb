@@ -55,6 +55,10 @@ RSpec.describe Tonal::Scale::Structure do
 
   describe "#determinant_by_step" do
     it { expect(subject.determinant_by_step(1)).to eq -2 }
+
+    it "refuses the irrational intervals of an EDO" do
+      expect{ described_class.new(Tonal::Scale.edo(7)).determinant_by_step(1) }.to raise_error(ArgumentError, /not defined for the irrational intervals/)
+    end
   end
 
   describe "#find_all" do

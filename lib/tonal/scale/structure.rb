@@ -115,12 +115,14 @@ class Tonal::Scale::Structure < Tonal::Scale::Service
   #   Tonal::Scale.harmonic.structure.unique_interval_prime_vectors_by_step(1)
   #   => [[-4, 0, 1], [-3, 1], ...]
   #
+  # @note intervals with a prime factor above Tonal::Ratio::PRIME_LIMIT, such as EDO steps, have nil in place of a vector
+  #
   # @param step [Integer] the step distance between note pairs
   #
   def unique_interval_prime_vectors_by_step(step)
-    pvs = unique_intervals_by_step(step).map(&:intervalic_ratio).map(&:prime_vector).map(&:to_a)
-    max_count = pvs.map(&:length).max
-    pvs.map{|e| e.rpad!(max_count, 0)}
+    pvs = unique_intervals_by_step(step).map(&:intervalic_ratio).map{|ratio| ratio.prime_vector.to_a if ratio.prime_divisions}
+    max_count = pvs.compact.map(&:length).max
+    pvs.map{|e| e&.rpad!(max_count, 0)}
   end
 
   # @return [Array] array of unique intervals for all steps of scale
@@ -171,8 +173,12 @@ class Tonal::Scale::Structure < Tonal::Scale::Service
   #
   # @param step [Integer] the step distance between note pairs
   #
+  # @raise [ArgumentError] when an interval at step has no prime vector within Tonal::Ratio::PRIME_LIMIT, as in EDO scales
+  #
   def determinant_by_step(step)
-    Matrix[*unique_interval_prime_vectors_by_step(step)].determinant
+    pvs = unique_interval_prime_vectors_by_step(step)
+    raise ArgumentError, "Prime vectors are not defined for the irrational intervals of #{scale.name}" if pvs.any?(&:nil?)
+    Matrix[*pvs].determinant
   end
 
   # @return [Array] of all intervals found in scale that span ratio

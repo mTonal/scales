@@ -22,6 +22,6 @@ class Tonal::Scale::Edo < Tonal::Scale
   # Return a set of lower rational numbered alternative ratios
   #
   def simplify(by: :continued_fraction)
-    Tonal::Scale.new(*approximate(by:).map{|r| r[1].ratios.entries[0]}.map{|r| r.nil? ? 1/1r : r}, name: "#{self.name} simplified", description: "#{self.name} simplified using #{by}")
+    Tonal::Scale.new(*approximations.approximate(by:).map{|r| r[1].ratios.entries[0]}.map{|r| r.nil? ? 1/1r : r}, name: "#{self.name} simplified", description: "#{self.name} simplified using #{by}")
   end
 end

@@ -13,8 +13,8 @@ module Tonal
   require "tonal/segment"
   require "tonal/scale"
   require "tonal/sequence"
-  require "tonal/analysis"
-  require "tonal/mappers"
+  require "tonal/scale/service"
+  Dir[File.join(__dir__, "scale", "*.rb")].each{|file| require file }
   require "tonal/attributions"
   Dir[File.join(__dir__, "interfaces", "*.rb")].each{|file| require file }
   Dir[File.join(__dir__, "sequences", "*.rb")].each{|file| require file }

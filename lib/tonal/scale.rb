@@ -1,52 +1,30 @@
 require "tonal/io"
 require "tonal/scales/constructors"
+require "tonal/scale/transformations"
 
+# A set of ratios within an equave. A scale is explored through areas, each reached from the scale:
+#
+#   scale.mode(2).invert          # Transformations: new scales from this one
+#   scale.to_cents                # Conversions: the ratios in other units
+#   scale.structure               # intervals between notes, constant structure, MOS
+#   scale.primes                  # prime content and complexity
+#   scale.approximations          # EDO steps, best-fitting EDO, simpler ratios
+#   scale.efficiency              # EDO step efficiencies and their statistics
+#   scale.report                  # Terminal::Table reports
+#   scale.to_scl, Scale.from_scl  # IO
+#
 class Tonal::Scale
   extend Forwardable
 
   def_delegators :@scale, :entries, :count, :length, :find, :find_index, :first, :each, :each_with_index, :&, :+, :-, :==, :to_a, :each_cons, :each_slice, :collect, :delete, :intersection, :replace
-  def_delegators :@analysis, # Analysis::Approximations
-                             :step_best_expressing,
-                             :ratio_best_expressing,
-                             :approximate,
-                             :best_fitting_edo,
-
-                             # Analysis::Descriptions
-                             :max_primes,
-                             :heights,
-                             :prime_divisions,
-                             :prime_vectors,
-                             :steps,
-                             :steps_in_cents,
-
-                             # Analysis::Efficiencies
-                             :efficiency_with,
-                             :efficiencies,
-
-                             # Analysis::Intervals
-                             :occurrences,
-                             :intervals,
-
-                             # Analysis::Statistics
-                             :mean, :variance, :standard_deviation,
-                             :averages_between_steps,
-
-                             # Analysis
-                             :cent_diff, :cent_diff_mod, :cents_distance_from, :combinations,
-                             :constant_structure?,
-                             :determinant_by_step,
-                             :find_all, :modes,
-                             :difference, :differences,
-                             :nearest_hundredth_cents_differences, :cents_difference_pairs
-
-  def_delegators :@mappers, :to_cents, :to_log2, :to_f, :to_r, :to_midi, :to_pitch_bends, :maps_on,
-                            :to_radians, :to_degrees, :to_circle, :negatives,
-                            :nearest_small_ratios, :adjusted_standard_tuning_frequency #, :best_fitting_edo
+  def_delegators :conversions, :to_cents, :to_log2, :to_f, :to_r, :to_midi, :to_pitch_bends,
+                               :to_radians, :to_degrees, :to_circle, :adjusted_standard_tuning_frequency
 
   def_delegators :@sequence, :sequence
 
   include Tonal::Scale::IO
   include Tonal::Scale::Constructors
+  include Tonal::Scale::Transformations
 
   DEFAULT_EQUAVE = 2/1r
 
@@ -79,8 +57,6 @@ class Tonal::Scale
     label_ratios!
     @name = kwargs[:name]
     @description = kwargs[:description]
-    @analysis = Analysis.new(self)
-    @mappers = Mappers.new(self)
   end
 
   alias :modulo :count
@@ -103,29 +79,6 @@ class Tonal::Scale
   #
   def description
     @description || default_description
-  end
-
-  # @return [Tonal::Scale] branching scale of self
-  #
-  # @example
-  #   Tonal::Scale.proportional(35/27r, 2/1r).branching => [(1/1), (32/27), (35/27), (73/54), (108/73), (128/73), (140/73)]
-  #
-  # @param starting_tones [Array] of ratios to start branching from, default is first and last of self
-  #
-  def branching(starting_tones: [self.first, self.last.invert])
-    Tonal::Scale.branching(segments: [to_a], starting_nodes: starting_tones)
-  end
-
-  # @return [Tonal::Scale] mode on step of self (step becomes 1/1 of self)
-  #
-  # @example
-  #   Tonal::Scale.harmonic(indices: 4..7).mode(4) => [1/1, 7/6, 4/3, 5/3]
-  #
-  # @param step [Integer] step index of the source scale on which the tonic of the mode is set
-  #
-  def mode(step)
-    #return self if (step % count == 0)
-    Tonal::Scale.new(*scale.collect{|r| r / self[step]}, name: "#{self.name} - mode #{step}", description: "#{self.description} - mode #{step}")
   end
 
   # @return [Array] of labels of the ratios of self
@@ -194,90 +147,35 @@ class Tonal::Scale
     ratios.denominize
   end
 
-  # @return [Tonal::Scale] a new scale with an additional ratio placed at `at`, scaled by `by`
-  #
+  # @return [Tonal::Scale::Structure] the intervals between the notes of self and the properties that follow from them
   # @example
-  #  Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).expand(at: 5/4r, by: 9/8r) => [1/1, 9/8, 5/4, 45/32, 3/2, 5/3]
+  #   Tonal::Scale.harmonic.structure.constant_structure? => false
   #
-  # @param at [Rational] the reference ratio to find and expand from
-  # @param by [Rational] the interval to multiply against ratios found at `at`
-  # @param boundary [:lower, :upper] which boundary ratios to operate on
-  # @param operator [Symbol] the arithmetic operator to apply
-  #
-  def expand(at:, by:, boundary: :lower, operator: :*)
-    scale = Scale.new(*self.scale).tap do |r|
-      r << find_all(at).map(&boundary).map{|r| r.send(operator, by)}
-    end
-    scale.name = "#{self.name} - expanded"
-    scale.description = "#{self.description} - expanded, by: #{by}, at: #{at}"
-    scale
-  end
+  def structure = Structure.new(self)
 
-  # @return [Tonal::Scale] of inverse (antecedent, consequent of ratios exchanged) of self
-  #
+  # @return [Tonal::Scale::Primes] the prime content and complexity of the ratios of self
   # @example
-  #   Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).invert => [1/1, 6/5, 4/3, 8/5, 16/9]
+  #   Tonal::Scale.harmonic.primes.max_primes => [nil, 3, 5, 11, 3, 13, 7, 5]
   #
-  def invert
-    Tonal::Scale.new(*scale.map{|p| p.invert})
-  end
+  def primes = Primes.new(self)
 
-  # @return [Tonal::Scale] of self modulo rotated by distance
-  #
+  # @return [Tonal::Scale::Approximations] EDO step mappings and simpler-ratio approximations of self
   # @example
-  #   Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).rotate(3/2r) => [1/1, 10/9, 4/3, 3/2, 5/3]
+  #   Tonal::Scale.edo(12).approximations.step_best_expressing(3/2r) => 72
   #
-  def rotate(distance=1/1r)
-    Tonal::Scale.new(*scale.map{|r| r / distance})
-  end
+  def approximations = Approximations.new(self)
 
-  # @return [Tonal::Scale] of self mirrored around the axis
-  #
+  # @return [Tonal::Scale::Efficiency] EDO step efficiencies of self and their statistics
   # @example
-  #   Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).mirror(1/1r) => [1/1, 6/5, 4/3, 8/5, 16/9]
+  #   Tonal::Scale.harmonic.efficiency.mean => -7.36
   #
-  def mirror(axis=1/1r)
-    Tonal::Scale.new(*scale.map{|r| r.mirror(axis)})
-  end
+  def efficiency = Efficiency.new(self)
 
-  # @return [Tonal::Scale] of self transformed by the Levy negative function
-  #
+  # @return [Tonal::Scale::Reporter] text table reports of self
   # @example
-  #  Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).negative => [1/1, 6/5, 4/3, 3/2, 9/5]
+  #   puts Tonal::Scale.harmonic.report.cross_table
   #
-  def negative
-    Tonal::Scale.new(*scale.map{|r| r.negative}, name: "#{self.name} - negative", description: "#{self.description} - negative")
-  end
-
-  # @return [Tonal::Scale] of sampled ratios
-  #
-  # @example
-  #   Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).sample => [5/4]
-  #
-  # @param n [Integer] number of ratios to sample from self, default is 1
-  #
-  def sample(n=1)
-    Tonal::Scale.new(*(to_a.sample(n)))
-  end
-
-  # @return [Tonal::Scale] new scale as reciprocal ratios
-  #
-  # @example
-  #   Tonal::Scale.harmonic.reciprocal => [1/1, 16/15, 8/7, 16/13, 4/3, 16/11, 8/5, 16/9]
-  #
-  def reciprocal
-    Tonal::Scale.new(*scale.map{|ratio| Tonal::ReducedRatio.new(ratio.consequent, ratio.antecedent)})
-  end
-
-  # @return [Tonal::Scale] self as reciprocal ratios
-  #
-  # @example
-  #   Tonal::Scale.harmonic.reciprocal! => [1/1, 16/15, 8/7, 16/13, 4/3, 16/11, 8/5, 16/9]
-  #
-  def reciprocal!
-    @scale = SortedSet.new(scale.map{|ratio| Tonal::ReducedRatio.new(ratio.consequent, ratio.antecedent)})
-    self
-  end
+  def report = Reporter.new(self)
 
   def inspect
     to_a.to_s
@@ -380,7 +278,7 @@ class Tonal::Scale
   #  # @param list [Numeric, Tonal::Ratio, Tonal::ReducedRatio, Array] of ratios to add to the end of the scale
   #
   def <<(*list)
-    list.each do |term|
+    list.flatten.each do |term|
       scale << term.to_reduced_ratio
     end
     self
@@ -470,6 +368,8 @@ class Tonal::Scale
   def scale
     @scale
   end
+
+  def conversions = Conversions.new(self)
 
   def init_sequence(*collection, **kwargs)
     nil

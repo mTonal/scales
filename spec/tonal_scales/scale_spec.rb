@@ -130,8 +130,18 @@ RSpec.describe Tonal::Scale do
     end
   end
 
-  describe "#steps" do
-    it { expect(described_class.new(5/4r, 7/4r).steps).to eq [Tonal::Scale::Step.new(modulo: 2, step: 1), Tonal::Scale::Step.new(modulo: 2, step: 2)] }
+  describe "#modes" do
+    let(:scale) { described_class.new(1/1r, 5/4r, 3/2r) }
+
+    it "returns a Tonal::Scale for each step, starting from 1/1" do
+      expect(scale.modes.map(&:to_r)).to eq [[1/1r, 5/4r, 3/2r], [1/1r, 6/5r, 8/5r], [1/1r, 4/3r, 5/3r]]
+    end
+  end
+
+  describe "#expand" do
+    it "adds the ratio found at the boundary of the interval, scaled by the given interval" do
+      expect(described_class.new(1/1r, 9/8r, 5/4r, 3/2r, 5/3r).expand(at: 5/4r, by: 9/8r, boundary: :upper).to_r).to eq [1/1r, 9/8r, 5/4r, 45/32r, 3/2r, 5/3r]
+    end
   end
 
   describe "#first" do
@@ -361,10 +371,6 @@ RSpec.describe Tonal::Scale do
     it "returns the string representation of the scale's ratios" do
       expect(described_class.new(ratios).inspect).to eq "[#{ratios.map(&:to_s).join(", ")}]"
     end
-  end
-
-  describe "#prime_divisions" do
-    it { expect(described_class.new(5/4r, 7/4r).prime_divisions).to eq [[[[5, 1]], [[2, 2]]], [[[7, 1]], [[2, 2]]]] }
   end
 
   describe "#antecedents" do

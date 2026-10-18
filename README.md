@@ -8,15 +8,20 @@ A collection of helpers and tools for creating and analyzing microtonal scales.
 
 ## Architecture
 
-`tonal/scales` is organized around two core abstractions — **Sequence** and **Scale** — supported by analysis, mapping, and I/O helpers.
+`tonal/scales` is organized around two core abstractions, **Sequence** and **Scale**. A scale is explored through a few areas, each reached from the scale itself.
 
 ```
 Tonal::Sequence          # generates a raw (unreduced, unordered) series of ratios
        ↓
-Tonal::Scale             # wraps a sequence; reduces ratios to the equave, sorts, deduplicates
-       ├── Analysis      # intervals, efficiency, approximations, constant structure, modes
-       ├── Mappers       # converts the scale to cents, log2, floats, degrees, radians, etc.
-       └── IO            # reads/writes SCL files and the Scala archive
+Tonal::Scale                 # wraps a sequence; reduces ratios to the equave, sorts, deduplicates
+       ├── Transformations   # scale.mode, invert, rotate, mirror, negative, expand… (new scales)
+       ├── Conversions       # scale.to_cents, to_log2, to_midi, to_pitch_bends, to_degrees…
+       ├── Structure         # scale.structure: intervals, occurrences, constant structure, MOS
+       ├── Primes            # scale.primes: prime vectors, prime divisions, heights
+       ├── Approximations    # scale.approximations: EDO steps, best-fitting EDO, simpler ratios
+       ├── Efficiency        # scale.efficiency: EDO step efficiencies, mean, variance, std dev
+       ├── Reporter          # scale.report: Terminal::Table reports
+       └── IO                # scale.to_scl, Tonal::Scale.from_scl, the Scala archive
 ```
 
 ### Tonal::Sequence
@@ -35,18 +40,24 @@ Tonal::Scale.new(1/1r, 9/8r, 5/4r, 3/2r, 7/4r)
 Tonal::Scale.new { |s| s << 1/1r << 5/4r << 3/2r }
 ```
 
-### Tonal::Scale::Analysis
+### Exploring a scale
 
-Provides analytical tools delegated directly from `Scale`:
+Transformations (which return new scales) and conversions (the `to_*` methods) are called on the scale directly. Each other area is a small service object reached through an accessor:
 
-- **Approximations** — best-fitting EDO, continued-fraction approximations
-- **Descriptions** — prime divisions, heights, steps in cents
-- **Efficiencies** — cent distance from a target ratio to the nearest scale step
-- **Intervals** — all intervals (occurrences, unique intervals)
-- **Statistics** — mean, variance, standard deviation of the scale's cent values
-- Constant structure detection, modes, combinations
+```ruby
+scale = Tonal::Scale.harmonic
+scale.mode(2).invert                     # Transformations
+scale.structure.constant_structure?      # => false
+scale.structure.occurrences              # every interval between notes, with its note pairs
+scale.primes.heights                     # => [1, 72, 20, 88, 6, 104, 28, 120]
+scale.approximations.best_fitting_edo
+scale.approximations.steps(12)           # the ratios as 12-EDO steps
+scale.efficiency.standard_deviation      # => 51.17
+puts scale.report.cross_table            # intervals between every pair of notes
+puts scale.report.inventory              # intervals with prime vectors and occurrences
+```
 
-### Tonal::Scale::Mappers
+### Tonal::Scale::Conversions
 
 Converts a scale's ratios to other representations:
 
@@ -67,7 +78,7 @@ Tonal::Scale.new(1/1r, 5/4r, 3/2r, 7/4r).to_pitch_bends
 # => [[1/1, 60, 0.0, 8192, 0], [5/4, 64, -13.69, 8169, -23], [3/2, 67, 1.96, 8195, 3], [7/4, 70, -31.17, 8139, -53]]
 scale.to_pitch_bends(midi_root: 57, bend_range: 2)   # 1/1 on A3, ±2 semitone bend
 
-puts Tonal::IO::TerminalTable.new(Tonal::Scale.harmonic).table_of_pitch_bends
+puts Tonal::Scale.harmonic.report.pitch_bends
 # ratio | note | MIDI | cents offset | bend (14-bit) | bend (signed)
 ```
 
@@ -134,8 +145,8 @@ require "tonal/scales"
 scale = Tonal::Scale.harmonic
 scale.to_cents          # cent values of all notes
 scale.modes             # all rotational modes
-scale.constant_structure?  # => false
-scale.efficiency_with(3/2r) # how well the scale approximates 3/2
+scale.structure.constant_structure?  # => false
+scale.efficiency.efficiency_with(3/2r) # how well the scale approximates 3/2
 
 # Transform a scale
 scale.invert            # swap antecedents and consequents
