@@ -51,28 +51,42 @@ class Tonal::Scale
         Asymptotic.new(start:, number:, limit:)
       end
 
+      # @return [Tonal::Scale::Branching] a scale built by transposing each segment onto each starting node
+      # @example
+      #   Tonal::Scale.branching
+      #   => [1/1, 28/27, 16/15, 4/3, 3/2, 14/9, 8/5]
+      # @param segments [Array<Array<Tonal::Ratio, Numeric>>] the interval chains (e.g. tetrachords) to be transposed
+      # @param starting_nodes [Array<Tonal::Ratio, Numeric>] the ratios each segment is multiplied by; the nodes themselves are also included
+      #
       def branching(segments: [[1/1r, 28/27r, 16/15r, 4/3r]], starting_nodes: [1/1r, 3/2r])
         Branching.new(segments:, starting_nodes:)
       end
 
-      # TODO: Document
-      # @return [Tonal::Scale::Composite]
+      # @return [Tonal::Scale::Composite] the union of a ratio set transposed to each placement, reduced to the equave
       # @example
       #   Tonal::Scale.composite([1/1r, 3/2r, 5/4r, 7/4r], [1/1r, 5/4r])
       #   => [1/1, 35/32, 5/4, 3/2, 25/16, 7/4, 15/8]
+      # @param ratios [Array<Tonal::Ratio, Numeric>] the ratio set to be transposed
+      # @param placements [Array<Tonal::Ratio, Numeric>] the ratios each member of the set is multiplied by
       #
       def composite(ratios, placements)
-        Composite.new(ratios, *placements)
+        Composite.new(ratios:, placements:)
       end
 
-      # @return [Tonal::Scale::ConvolvedProportional]
+      # @return [Tonal::Scale::ConvolvedProportional] a scale that divides the interval between every pair of the given ratios into equal (arithmetic) steps
       # @example
       #   Tonal::Scale.convolved_proportional(3/2r, 7/4r)
       #   => [3/2, 13/8, 7/4]
-      # @param ratios
-      # @param segments
-      # @param left_range
-      # @param right_range
+      # @example Extending one step beyond each end
+      #   Tonal::Scale.convolved_proportional(3/2r, 7/4r, left_range: 1, right_range: 1)
+      #   => [11/8, 3/2, 13/8, 7/4, 15/8]
+      # @example Dividing into three parts
+      #   Tonal::Scale.convolved_proportional(3/2r, 7/4r, segments: 3)
+      #   => [3/2, 19/12, 5/3, 7/4]
+      # @param ratios [Array<Tonal::Ratio, Numeric>] the ratios whose pairwise intervals are divided
+      # @param segments [Integer] the number of equal parts each interval is divided into
+      # @param left_range [Integer] the number of additional steps extended below the lowest ratio
+      # @param right_range [Integer] the number of additional steps extended above the highest ratio
       #
       def convolved_proportional(*ratios, segments: 2, left_range: 0, right_range: 0)
         ConvolvedProportional.new(ratios: ratios, segments:, left_range:, right_range:)
@@ -130,14 +144,15 @@ class Tonal::Scale
        Harmonic.new(indices:, nexus:)
       end
 
-      # @return [Tonal::Scale::IntraProportional]
+      # @return [Tonal::Scale::IntraProportional] a scale that divides the interval between two ratios into equal (arithmetic) steps
       # @example
-      #   Tonal::Scale.intra_proportional(3/2r, 7/4r)
-      #   => [3/2, 13/8, 7/4]
-      # @param ratios
-      # @param segments
-      # @param left_range
-      # @param right_range
+      #   Tonal::Scale.intra_proportional(9/8r, 35/24r, segments: 4, left_range: 3, right_range: 3)
+      #   => [25/24, 9/8, 29/24, 31/24, 11/8, 35/24, 37/24, 13/8, 41/24, 7/4, 23/12]
+      # @param ratios [Array<Tonal::Ratio, Numeric>] exactly two ratios bounding the interval to divide
+      # @param segments [Integer] the number of equal parts the interval is divided into
+      # @param left_range [Integer] the number of additional steps extended below the first ratio
+      # @param right_range [Integer] the number of additional steps extended above the second ratio
+      # @raise [ArgumentError] unless exactly two ratios are given
       #
       def intra_proportional(*ratios, segments: 2, left_range: 0, right_range: 0)
         IntraProportional.new(ratios: ratios, segments:, left_range:, right_range:)
@@ -191,27 +206,34 @@ class Tonal::Scale
       # @param seeds [Array] of [Integer] initiators of scale
       # @param indices [Array] of [Integer] indices used in recursion
       # @param coeff [Array] of [Integer] factors used in recursion
+      # @param start_at [Integer] number of leading terms of the series to drop before forming the scale
       #
       def recurrence(upto: 15, seeds: [0, 1], indices: [-1, -2], coeff: [1, 1], start_at: 0)
         Recurrence.new(upto:, seeds:, indices:, coeff:, start_at:)
       end
 
-      # TODO: Document
+      # @return [Tonal::Scale::Polyharmonic] the union of harmonic sequences built on several fundamentals
       # @example
       #   Tonal::Scale.polyharmonic
       #   => [1/1, 9/8, 5/4, 11/8, 3/2, 13/8, 7/4, 15/8]
+      # @example Harmonics 4-8 over 1/1 and 3/2
+      #   Tonal::Scale.polyharmonic(indices: (4..8), fundamentals: [1/1r, 3/2r])
+      #   => [1/1, 9/8, 5/4, 21/16, 3/2, 7/4, 15/8]
+      # @param indices [Range] the harmonic numbers generated over each fundamental
+      # @param fundamentals [Array<Tonal::Ratio, Numeric>] the fundamentals the harmonic sequence is built on
       #
       def polyharmonic(indices: (8..16), fundamentals: [1/1r])
         Polyharmonic.new(indices:, fundamentals:)
       end
 
-      # @return [Tonal::Scale::Proportional]
+      # @return [Tonal::Scale::Proportional] a scale that repeats the arithmetic difference between two ratios outward from them
       # @example
       #   Tonal::Scale.proportional(3/2r, 7/4r)
       #   => [1/1, 5/4, 3/2, 7/4]
-      # @param ratios list of pairs of ratios over which proportionality is calculated
-      # @param left_range
-      # @param right_range
+      # @param ratios [Array<Tonal::Ratio, Numeric>] the two ratios whose difference sets the step size
+      # @param left_range [Integer] the number of steps extended below the lower ratio
+      # @param right_range [Integer] the number of steps extended above the higher ratio (tones beyond the equave are reduced back into it)
+      # @raise [ArgumentError] unless exactly two ratios are given
       #
       def proportional(*ratios, left_range: 1, right_range: 1)
         Proportional.new(ratios: [ratios], left_range:, right_range:)

@@ -1,6 +1,6 @@
 class Tonal::Scale::ConvolvedProportional < Tonal::Scale
   def init_sequence
-    Tonal::Sequence::ConvolvedProportional.new(ratios: @args[:ratios], left_range: @args[:left_range], right_range: @args[:right_range])
+    Tonal::Sequence::ConvolvedProportional.new(ratios: @args[:ratios], segments: @args[:segments], left_range: @args[:left_range], right_range: @args[:right_range])
   end
 
   def default_name

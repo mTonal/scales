@@ -106,6 +106,7 @@ RSpec.describe "Tonal::Scale contract" do
     "arithmetic" => -> { Tonal::Scale.arithmetic },
     "asymptotic" => -> { Tonal::Scale.asymptotic },
     "branching" => -> { Tonal::Scale.branching },
+    "composite" => -> { Tonal::Scale.composite([1/1r, 3/2r, 5/4r, 7/4r], [1/1r, 5/4r]) },
     "convolved_proportional" => -> { Tonal::Scale.convolved_proportional(5/4r, 3/2r) },
     "cps" => -> { Tonal::Scale.cps },
     "diamond" => -> { Tonal::Scale.diamond },
